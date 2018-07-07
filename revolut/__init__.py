@@ -5,15 +5,6 @@
 import requests
 import json
 from urllib.parse import urljoin
-import os
-
-_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
-_TOKEN = os.environ.get('REVOLUT_TOKEN', None)
-
-if _TOKEN is None:
-    raise OSError('REVOLUT_TOKEN environment variable not set')
-elif _DEVICE_ID is None:
-    raise OSError('REVOLUT_DEVICE_ID environment variable not set')
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
@@ -86,13 +77,17 @@ class Amount(object):
 
 class Client(object):
     """ Do the requests with the Revolut servers """
-    def __init__(self):
+    def __init__(self, token, device_id):
+        if token is None:
+            raise OSError('REVOLUT_TOKEN environment variable not set')
+        elif device_id is None:
+            raise OSError('REVOLUT_DEVICE_ID environment variable not set')
         self.session = requests.session()
         self.headers = {
                     'Host': 'api.revolut.com',
                     'X-Api-Version': '1',
-                    'X-Device-Id': _DEVICE_ID,
-                    'Authorization': _TOKEN,
+                    'X-Device-Id': device_id,
+                    'Authorization': token,
                     }
 
     def _get(self, url):
@@ -112,97 +107,99 @@ class Client(object):
         return ret
 
 
-def get_accounts():
-    """ Get the account balance for each currency """
-    c = Client()
-    ret = c._get(_URL_GET_ACCOUNTS)
-    raw_accounts = json.loads(ret.text)
+class Revolut(object):
+    def __init__(self, token, device_id):
+        self.client = Client(token=token, device_id=device_id)
 
-    accounts = []
-    for raw_account in raw_accounts.get("pockets"):
-        account = {}
-        account["balance"] = raw_account.get("balance")
-        account["currency"] = raw_account.get("currency")
-        accounts.append(account)
-    return accounts
+    def get_accounts(self):
+        """ Get the account balance for each currency """
+        ret = self.client._get(_URL_GET_ACCOUNTS)
+        raw_accounts = json.loads(ret.text)
 
+        accounts = []
+        for raw_account in raw_accounts.get("pockets"):
+            account = {}
+            account["balance"] = raw_account.get("balance")
+            account["currency"] = raw_account.get("currency")
+            accounts.append(account)
+        return accounts
 
-def get_last_transaction_from_csv(filename="exchange_history.csv"):
-    return {
-                'date': '07/07/2018',
-                'hour': '08:45:30',
-                'from_amount': 0.00003555,
-                'from_currency': 'BTC',
-                'to_amount': 20.55,
-                'to_currency': 'EUR',
-            }
+    def get_last_transaction_from_csv(self, filename="exchange_history.csv"):
+        return {
+                    'date': '07/07/2018',
+                    'hour': '08:45:30',
+                    'from_amount': 0.00003555,
+                    'from_currency': 'BTC',
+                    'to_amount': 20.55,
+                    'to_currency': 'EUR',
+                }
 
+    def quote(self, from_amount, to_currency):
+        if type(from_amount) != Amount:
+            raise TypeError("from_amount must be with the Amount type")
 
-def quote(from_amount, to_currency):
-    if type(from_amount) != Amount:
-        raise TypeError("from_amount must be with the Amount type")
+        if to_currency not in _AVAILABLE_CURRENCIES:
+                raise KeyError(to_currency)
 
-    if to_currency not in _AVAILABLE_CURRENCIES:
-            raise KeyError(to_currency)
+        url_quote = urljoin(_URL_QUOTE, ("%s%s?amount=%d&side=SELL" %
+                                         (from_amount.currency,
+                                          to_currency,
+                                          from_amount.revolut_amount)))
+        ret = self.client._get(url_quote)
+        raw_quote = json.loads(ret.text)
+        quote_obj = Amount(revolut_amount=raw_quote["to"]["amount"],
+                           currency=to_currency)
+        return quote_obj
 
-    url_quote = urljoin(_URL_QUOTE, ("%s%s?amount=%d&side=SELL" %
-                                     (from_amount.currency,
-                                      to_currency,
-                                      from_amount.revolut_amount)))
-    c = Client()
-    ret = c._get(url_quote)
-    raw_quote = json.loads(ret.text)
-    quote_obj = Amount(revolut_amount=raw_quote["to"]["amount"],
-                       currency=to_currency)
-    return quote_obj
+    def exchange(self, from_amount, to_currency, simulate=False):
+        if type(from_amount) != Amount:
+            raise TypeError("from_amount must be with the Amount type")
 
+        if to_currency not in _AVAILABLE_CURRENCIES:
+                raise KeyError(to_currency)
 
-def exchange(from_amount, to_currency, simulate=False):
-    if type(from_amount) != Amount:
-        raise TypeError("from_amount must be with the Amount type")
+        data = '{"fromCcy":"%s","fromAmount":%d,"toCcy":"%s","toAmount":null}'\
+            % (from_amount.currency,
+               from_amount.revolut_amount,
+               to_currency)
 
-    if to_currency not in _AVAILABLE_CURRENCIES:
-            raise KeyError(to_currency)
+        if simulate:
+            # Because we don't want to exchange currencies
+            # for every test ;)
+            simu = '[{"account":{"id":"FAKE_ID"},\
+            "amount":-1,"balance":0,"completedDate":123456789,\
+            "counterpart":{"account":\
+            {"id":"FAKE_ID"},\
+            "amount":170,"currency":"BTC"},"currency":"EUR",\
+            "description":"Exchanged to BTC","direction":"sell",\
+            "fee":0,"id":"FAKE_ID",\
+            "legId":"FAKE_ID","rate":0.0001751234,\
+            "startedDate":123456789,"state":"COMPLETED","type":"EXCHANGE",\
+            "updatedDate":123456789},\
+            {"account":{"id":"FAKE_ID"},"amount":170,\
+            "balance":12345,"completedDate":12345678,"counterpart":\
+            {"account":{"id":"FAKE_ID"},\
+            "amount":-1,"currency":"EUR"},"currency":"BTC",\
+            "description":"Exchanged from EUR","direction":"buy","fee":0,\
+            "id":"FAKE_ID",\
+            "legId":"FAKE_ID",\
+            "rate":5700.0012345,"startedDate":123456789,\
+            "state":"COMPLETED","type":"EXCHANGE",\
+            "updatedDate":123456789}]'
+            raw_exchange = json.loads(simu)
+        else:
+            ret = self.client._post(url=_URL_EXCHANGE, post_data=data)
+            raw_exchange = json.loads(ret.text)
 
-    c = Client()
-    data = '{"fromCcy":"%s","fromAmount":%d,"toCcy":"%s","toAmount":null}' % \
-           (from_amount.currency, from_amount.revolut_amount, to_currency)
+        if raw_exchange[0]["state"] == "COMPLETED":
+            amount = raw_exchange[0]["counterpart"]["amount"]
+            currency = raw_exchange[0]["counterpart"]["currency"]
+            exchanged_amount = Amount(revolut_amount=amount,
+                                      currency=currency)
+        else:
+            raise ConnectionError("Transaction error : %s" % ret.text)
 
-    if simulate:
-        # Because we don't want to exchange currencies for every test ;)
-        simu = '[{"account":{"id":"FAKE_ID"},\
-        "amount":-1,"balance":0,"completedDate":123456789,\
-        "counterpart":{"account":\
-        {"id":"FAKE_ID"},\
-        "amount":170,"currency":"BTC"},"currency":"EUR",\
-        "description":"Exchanged to BTC","direction":"sell",\
-        "fee":0,"id":"FAKE_ID",\
-        "legId":"FAKE_ID","rate":0.0001751234,\
-        "startedDate":123456789,"state":"COMPLETED","type":"EXCHANGE",\
-        "updatedDate":123456789},\
-        {"account":{"id":"FAKE_ID"},"amount":170,\
-        "balance":12345,"completedDate":12345678,"counterpart":\
-        {"account":{"id":"FAKE_ID"},\
-        "amount":-1,"currency":"EUR"},"currency":"BTC",\
-        "description":"Exchanged from EUR","direction":"buy","fee":0,\
-        "id":"FAKE_ID",\
-        "legId":"FAKE_ID",\
-        "rate":5700.0012345,"startedDate":123456789,\
-        "state":"COMPLETED","type":"EXCHANGE","updatedDate":123456789}]'
-        raw_exchange = json.loads(simu)
-    else:
-        ret = c._post(url=_URL_EXCHANGE, post_data=data)
-        raw_exchange = json.loads(ret.text)
+        return exchanged_amount
 
-    if raw_exchange[0]["state"] == "COMPLETED":
-        amount = raw_exchange[0]["counterpart"]["amount"]
-        currency = raw_exchange[0]["counterpart"]["currency"]
-        exchanged_amount = Amount(revolut_amount=amount, currency=currency)
-    else:
-        raise ConnectionError("Transaction error : %s" % ret.text)
-
-    return exchanged_amount
-
-
-def write_a_transaction_to_csv(filename):
-    return True
+    def write_a_transaction_to_csv(self, filename):
+        return True
