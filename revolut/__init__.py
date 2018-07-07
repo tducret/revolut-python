@@ -170,25 +170,25 @@ def exchange(from_amount, to_currency, simulate=False):
 
     if simulate:
         # Because we don't want to exchange currencies for every test ;)
-        simu = '[{"account":{"id":"78a6f88c-96ce-4944-b4c2-8592d9c718a3"},\
-        "amount":-1,"balance":0,"completedDate":1530965632704,\
+        simu = '[{"account":{"id":"FAKE_ID"},\
+        "amount":-1,"balance":0,"completedDate":123456789,\
         "counterpart":{"account":\
-        {"id":"e0ccdfdd-60c4-40ca-bc00-ed2d1b929818"},\
-        "amount":175,"currency":"BTC"},"currency":"EUR",\
+        {"id":"FAKE_ID"},\
+        "amount":170,"currency":"BTC"},"currency":"EUR",\
         "description":"Exchanged to BTC","direction":"sell",\
-        "fee":0,"id":"be0fc22e-f680-4aa5-8618-f243640276d9",\
-        "legId":"90a33d13-3e9d-46c8-b30a-f68b2efa29e6","rate":0.00017543835,\
-        "startedDate":1530965632704,"state":"COMPLETED","type":"EXCHANGE",\
-        "updatedDate":1530965632704},\
-        {"account":{"id":"e0ccdfdd-60c4-40ca-bc00-ed2d1b929818"},"amount":175,\
-        "balance":324555,"completedDate":1530965632704,"counterpart":\
-        {"account":{"id":"78a6f88c-96ce-4944-b4c2-8592d9c718a3"},\
+        "fee":0,"id":"FAKE_ID",\
+        "legId":"FAKE_ID","rate":0.0001751234,\
+        "startedDate":123456789,"state":"COMPLETED","type":"EXCHANGE",\
+        "updatedDate":123456789},\
+        {"account":{"id":"FAKE_ID"},"amount":170,\
+        "balance":12345,"completedDate":12345678,"counterpart":\
+        {"account":{"id":"FAKE_ID"},\
         "amount":-1,"currency":"EUR"},"currency":"BTC",\
         "description":"Exchanged from EUR","direction":"buy","fee":0,\
-        "id":"be0fc22e-f680-4aa5-8618-f243640276d9",\
-        "legId":"3a4b93da-f3a4-483d-87d2-7ebf7d8b0133",\
-        "rate":5700.00800851125,"startedDate":1530965632704,\
-        "state":"COMPLETED","type":"EXCHANGE","updatedDate":1530965632704}]'
+        "id":"FAKE_ID",\
+        "legId":"FAKE_ID",\
+        "rate":5700.0012345,"startedDate":123456789,\
+        "state":"COMPLETED","type":"EXCHANGE","updatedDate":123456789}]'
         raw_exchange = json.loads(simu)
     else:
         ret = c._post(url=_URL_EXCHANGE, post_data=data)
