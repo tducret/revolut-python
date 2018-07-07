@@ -17,6 +17,7 @@ elif _DEVICE_ID is None:
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
+_URL_EXCHANGE = "https://api.revolut.com/exchange"
 
 _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
@@ -95,9 +96,19 @@ class Client(object):
                     }
 
     def _get(self, url):
-        ret = self.session.get(url, headers=self.headers)
+        ret = self.session.get(url=url, headers=self.headers)
         if (ret.status_code != 200):
-            raise ConnectionError
+            raise ConnectionError("Status code [%d] for url %s\n%s" %
+                                  (ret.status_code, url, ret.text))
+        return ret
+
+    def _post(self, url, post_data):
+        ret = self.session.post(url=url,
+                                headers=self.headers,
+                                data=post_data)
+        if (ret.status_code != 200):
+            raise ConnectionError("Status code [%d] for url %s\n%s" %
+                                  (ret.status_code, url, ret.text))
         return ret
 
 
@@ -129,7 +140,10 @@ def get_last_transaction_from_csv(filename="exchange_history.csv"):
 
 def quote(from_amount, to_currency):
     if type(from_amount) != Amount:
-        raise TypeError
+        raise TypeError("from_amount must be with the Amount type")
+
+    if to_currency not in _AVAILABLE_CURRENCIES:
+            raise KeyError(to_currency)
 
     url_quote = urljoin(_URL_QUOTE, ("%s%s?amount=%d&side=SELL" %
                                      (from_amount.currency,
@@ -143,8 +157,51 @@ def quote(from_amount, to_currency):
     return quote_obj
 
 
-def exchange(from_amount, from_currency, to_currency):
-    return float(from_amount*2)
+def exchange(from_amount, to_currency, simulate=False):
+    if type(from_amount) != Amount:
+        raise TypeError("from_amount must be with the Amount type")
+
+    if to_currency not in _AVAILABLE_CURRENCIES:
+            raise KeyError(to_currency)
+
+    c = Client()
+    data = '{"fromCcy":"%s","fromAmount":%d,"toCcy":"%s","toAmount":null}' % \
+           (from_amount.currency, from_amount.revolut_amount, to_currency)
+
+    if simulate:
+        # Because we don't want to exchange currencies for every test ;)
+        simu = '[{"account":{"id":"78a6f88c-96ce-4944-b4c2-8592d9c718a3"},\
+        "amount":-1,"balance":0,"completedDate":1530965632704,\
+        "counterpart":{"account":\
+        {"id":"e0ccdfdd-60c4-40ca-bc00-ed2d1b929818"},\
+        "amount":175,"currency":"BTC"},"currency":"EUR",\
+        "description":"Exchanged to BTC","direction":"sell",\
+        "fee":0,"id":"be0fc22e-f680-4aa5-8618-f243640276d9",\
+        "legId":"90a33d13-3e9d-46c8-b30a-f68b2efa29e6","rate":0.00017543835,\
+        "startedDate":1530965632704,"state":"COMPLETED","type":"EXCHANGE",\
+        "updatedDate":1530965632704},\
+        {"account":{"id":"e0ccdfdd-60c4-40ca-bc00-ed2d1b929818"},"amount":175,\
+        "balance":324555,"completedDate":1530965632704,"counterpart":\
+        {"account":{"id":"78a6f88c-96ce-4944-b4c2-8592d9c718a3"},\
+        "amount":-1,"currency":"EUR"},"currency":"BTC",\
+        "description":"Exchanged from EUR","direction":"buy","fee":0,\
+        "id":"be0fc22e-f680-4aa5-8618-f243640276d9",\
+        "legId":"3a4b93da-f3a4-483d-87d2-7ebf7d8b0133",\
+        "rate":5700.00800851125,"startedDate":1530965632704,\
+        "state":"COMPLETED","type":"EXCHANGE","updatedDate":1530965632704}]'
+        raw_exchange = json.loads(simu)
+    else:
+        ret = c._post(url=_URL_EXCHANGE, post_data=data)
+        raw_exchange = json.loads(ret.text)
+
+    if raw_exchange[0]["state"] == "COMPLETED":
+        amount = raw_exchange[0]["counterpart"]["amount"]
+        currency = raw_exchange[0]["counterpart"]["currency"]
+        exchanged_amount = Amount(revolut_amount=amount, currency=currency)
+    else:
+        raise ConnectionError("Transaction error : %s" % ret.text)
+
+    return exchanged_amount
 
 
 def write_a_transaction_to_csv(filename):
