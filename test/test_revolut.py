@@ -9,25 +9,33 @@ _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "QAR", "NOK", "SEK", "BTC"]
 
 
+def test_class_Amount():
+    amount = revolut.Amount(revolut_amount=100, currency="EUR")
+    assert amount.real_amount == 1
+    assert str(amount) == "1.00 EUR"
+    amount = revolut.Amount(revolut_amount=100000000, currency="BTC")
+    assert amount.real_amount == 1
+    assert str(amount) == "1.00000000 BTC"
+    with pytest.raises(KeyError):
+        amount = revolut.Amount(revolut_amount=100, currency="UNKNOWN")
+    with pytest.raises(TypeError):
+        amount = revolut.Amount(revolut_amount="abc", currency="BTC")
+    with pytest.raises(ValueError):
+        amount = revolut.Amount(currency="BTC")
+
+
 def test_get_accounts():
     accounts = revolut.get_accounts()
     assert len(accounts) > 0
     print()
-    print("%d accounts" % len(accounts))
+    print("[%d accounts]" % len(accounts))
     for compte in accounts:
         assert type(compte) == dict
         assert type(compte['balance']) == int
         assert compte['currency'] in _AVAILABLE_CURRENCIES
-        if compte['currency'] == "BTC":
-            balance_format = 8
-        else:
-            balance_format = 2
-
-        print("%.*f %s" %
-              (balance_format,
-               revolut.get_real_amount(revolut_amount=compte['balance'],
-                                       currency=compte['currency']),
-               compte['currency']))
+        balance = revolut.Amount(revolut_amount=compte['balance'],
+                                 currency=compte['currency'])
+        print(balance)
 
 
 def test_get_last_transaction_from_csv():
@@ -47,25 +55,19 @@ def test_write_a_transaction_to_csv():
 
 
 def test_quote():
-    eur_to_btc = 100000
-    btc_to_eur = 100000000
+    eur_to_btc = revolut.Amount(real_amount=5508.85, currency="EUR")
+    btc_to_eur = revolut.Amount(real_amount=1, currency="BTC")
     quote_eur_btc = revolut.quote(
                         from_amount=eur_to_btc,
-                        from_currency="EUR",
                         to_currency="BTC")
     quote_btc_eur = revolut.quote(
                         from_amount=btc_to_eur,
-                        from_currency="BTC",
                         to_currency="EUR")
-    assert type(quote_eur_btc) == int
-    assert type(quote_btc_eur) == int
+    assert type(quote_eur_btc) == revolut.Amount
+    assert type(quote_btc_eur) == revolut.Amount
     print()
-    print("%.2f EUR => %.2f BTC" % (
-        revolut.get_real_amount(revolut_amount=eur_to_btc, currency="EUR"),
-        revolut.get_real_amount(revolut_amount=quote_eur_btc, currency="BTC")))
-    print("%.2f BTC => %.2f EUR" % (
-        revolut.get_real_amount(revolut_amount=btc_to_eur, currency="BTC"),
-        revolut.get_real_amount(revolut_amount=quote_btc_eur, currency="EUR")))
+    print("%s => %s" % (eur_to_btc, quote_eur_btc))
+    print("%s => %s" % (btc_to_eur, quote_btc_eur))
 
 
 def test_exchange():
@@ -73,15 +75,3 @@ def test_exchange():
                         from_amount=10.0,
                         from_currency="EUR",
                         to_currency="BTC")) == float
-
-
-def test_get_real_amount():
-    real_amount_eur = revolut.get_real_amount(revolut_amount=1, currency="EUR")
-    real_amount_btc = revolut.get_real_amount(revolut_amount=1000,
-                                              currency="BTC")
-    assert real_amount_eur == 0.01
-    assert real_amount_btc == 0.00001
-    with pytest.raises(KeyError):
-        revolut.get_real_amount(revolut_amount=100, currency="UNKNOWN")
-    with pytest.raises(TypeError):
-        revolut.get_real_amount(revolut_amount="abc", currency="BTC")

@@ -32,6 +32,57 @@ _SCALE_FACTOR_CURRENCY_DICT = {
                                }
 
 
+class Amount(object):
+    """ Class to handle the Revolut amount with currencies """
+    def __init__(self, currency, revolut_amount=None, real_amount=None):
+        if currency not in _AVAILABLE_CURRENCIES:
+            raise KeyError(currency)
+        self.currency = currency
+
+        if revolut_amount is not None:
+            if type(revolut_amount) not in [int]:
+                raise TypeError(type(revolut_amount))
+            self.revolut_amount = revolut_amount
+            self.real_amount = self.get_real_amount()
+        elif real_amount is not None:
+            if type(real_amount) not in [int, float]:
+                raise TypeError(type(real_amount))
+            self.real_amount = real_amount
+            self.revolut_amount = self.get_revolut_amount()
+        else:
+            raise ValueError("revolut_amount or real_amount must be set")
+
+    def __str__(self):
+        if self.currency == "BTC":
+            digits_after_float = 8
+        else:
+            digits_after_float = 2
+
+        return("%.*f %s" % (digits_after_float,
+                            self.real_amount,
+                            self.currency))
+
+    def get_real_amount(self):
+        """ Get the real amount from a Revolut amount
+        >>> a = Amount(revolut_amount=100, currency="EUR")
+        >>> a.get_real_amount()
+        1.0
+        """
+        scale = _SCALE_FACTOR_CURRENCY_DICT.get(
+                self.currency, _DEFAULT_SCALE_FACTOR)
+        return (self.revolut_amount/scale)
+
+    def get_revolut_amount(self):
+        """ Get the Revolut amount from a real amount
+        >>> a = Amount(real_amount=1, currency="EUR")
+        >>> a.get_revolut_amount()
+        100
+        """
+        scale = _SCALE_FACTOR_CURRENCY_DICT.get(
+                self.currency, _DEFAULT_SCALE_FACTOR)
+        return (self.real_amount*scale)
+
+
 class Client(object):
     """ Do the requests with the Revolut servers """
     def __init__(self):
@@ -76,15 +127,20 @@ def get_last_transaction_from_csv(filename="exchange_history.csv"):
             }
 
 
-def quote(from_amount, from_currency, to_currency):
+def quote(from_amount, to_currency):
+    if type(from_amount) != Amount:
+        raise TypeError
+
     url_quote = urljoin(_URL_QUOTE, ("%s%s?amount=%d&side=SELL" %
-                                     (from_currency,
+                                     (from_amount.currency,
                                       to_currency,
-                                      from_amount)))
+                                      from_amount.revolut_amount)))
     c = Client()
     ret = c._get(url_quote)
     raw_quote = json.loads(ret.text)
-    return raw_quote["to"]["amount"]
+    quote_obj = Amount(revolut_amount=raw_quote["to"]["amount"],
+                       currency=to_currency)
+    return quote_obj
 
 
 def exchange(from_amount, from_currency, to_currency):
@@ -93,17 +149,3 @@ def exchange(from_amount, from_currency, to_currency):
 
 def write_a_transaction_to_csv(filename):
     return True
-
-
-def get_real_amount(revolut_amount, currency):
-    """ Correct the scale factor of the Revolut amount """
-
-    if type(revolut_amount) not in [int, float]:
-        raise TypeError(type(revolut_amount))
-
-    if currency not in _AVAILABLE_CURRENCIES:
-        raise KeyError(currency)
-
-    scale = _SCALE_FACTOR_CURRENCY_DICT.get(currency, _DEFAULT_SCALE_FACTOR)
-
-    return (revolut_amount/scale)
