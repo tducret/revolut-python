@@ -48,7 +48,7 @@ def test_get_accounts():
     assert len(accounts) > 0
 
     print()
-    print("[%d accounts]" % len(accounts))
+    print(f'[{len(accounts)} accounts]')
 
     for compte in accounts:
         assert type(compte) == dict
@@ -56,7 +56,7 @@ def test_get_accounts():
         assert compte['currency'] in _AVAILABLE_CURRENCIES
 
         balance = Amount(revolut_amount=compte['balance'],
-                                 currency=compte['currency'])
+                         currency=compte['currency'])
         print(balance)
 
 
@@ -81,12 +81,12 @@ def test_quote():
     quote_eur_btc = revolut.quote(from_amount=eur_to_btc, to_currency="BTC")
     assert type(quote_eur_btc) == Amount
     print()
-    print("%s => %s" % (eur_to_btc, quote_eur_btc))
+    print(f'{eur_to_btc} => {quote_eur_btc}')
 
     btc_to_eur = Amount(real_amount=1, currency="BTC")
     quote_btc_eur = revolut.quote(from_amount=btc_to_eur, to_currency="EUR")
     assert type(quote_btc_eur) == Amount
-    print("%s => %s" % (btc_to_eur, quote_btc_eur))
+    print(f'{btc_to_eur} => {quote_btc_eur}')
 
 
 def test_quote_errors():
@@ -108,7 +108,7 @@ def test_exchange():
                                             simulate=_SIMU_EXCHANGE)
     assert type(exchange_transaction) == Amount
     print()
-    print("%s => %s : exchange OK" % (eur_to_btc, exchange_transaction))
+    print(f'{eur_to_btc} => {exchange_transaction} : exchange OK')
 
 
 def test_exchange_errors():
