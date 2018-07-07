@@ -5,9 +5,15 @@
 import requests
 import json
 from urllib.parse import urljoin
+import os
 
-_DEVICE_ID = 'TO_BE_MODIFIED'
-_TOKEN = 'TO_BE_MODIFIED'
+_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
+_TOKEN = os.environ.get('REVOLUT_TOKEN', None)
+
+if _TOKEN is None:
+    raise OSError('REVOLUT_TOKEN environment variable not set')
+elif _DEVICE_ID is None:
+    raise OSError('REVOLUT_DEVICE_ID environment variable not set')
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
