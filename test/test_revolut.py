@@ -1,4 +1,5 @@
 from revolut import Amount
+from revolut import Accounts
 from revolut import Revolut
 import pytest
 import os
@@ -51,14 +52,9 @@ def test_get_account_balances():
     print()
     print('[{} accounts]'.format(len(accounts)))
 
-    for compte in accounts:
-        assert type(compte) == dict
-        assert type(compte['balance']) == int
-        assert compte['currency'] in _AVAILABLE_CURRENCIES
-
-        balance = Amount(revolut_amount=compte['balance'],
-                         currency=compte['currency'])
-        print(balance)
+    for account in accounts:
+        assert type(account) == Amount
+        print('{}'.format(account))
 
 
 def test_quote():
@@ -139,3 +135,25 @@ def test_exchange_errors():
         # Should return a status code 400 because the amount must be > 0
         ten_thousands_euros = Amount(real_amount=1, currency="EUR")
         revolut.exchange(from_amount=ten_thousands_euros, to_currency="EUR")
+
+
+def test_class_accounts():
+    account_balances = [{"balance": 10000, "currency": "EUR"},
+                        {"balance": 550, "currency": "USD"},
+                        {"balance": 1000000, "currency": "BTC"}]
+    accounts = Accounts(account_balances)
+    assert len(accounts.list) == 3
+
+    csv_fr = accounts.csv()
+    print(csv_fr)
+    assert csv_fr == "Nom du compte;Solde;Devise\n\
+EUR wallet;100,00;EUR\n\
+USD wallet;5,50;USD\n\
+BTC wallet;0,01000000;BTC"
+
+    csv_en = accounts.csv(lang="en")
+    print(csv_en)
+    assert csv_en == "Account name,Balance,Currency\n\
+EUR wallet,100.00,EUR\n\
+USD wallet,5.50,USD\n\
+BTC wallet,0.01000000,BTC"

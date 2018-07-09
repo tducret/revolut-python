@@ -47,15 +47,19 @@ class Amount(object):
         else:
             raise ValueError("revolut_amount or real_amount must be set")
 
-    def __str__(self):
+        self.real_amount_str = self.get_real_amount_str()
+
+    def get_real_amount_str(self):
+        """ Get the real amount with the proper format, without currency """
         if self.currency == "BTC":
             digits_after_float = 8
         else:
             digits_after_float = 2
 
-        return("%.*f %s" % (digits_after_float,
-                            self.real_amount,
-                            self.currency))
+        return("%.*f" % (digits_after_float, self.real_amount))
+
+    def __str__(self):
+        return('{} {}'.format(self.real_amount_str, self.currency))
 
     def get_real_amount(self):
         """ Get the real amount from a Revolut amount
@@ -128,7 +132,8 @@ class Revolut(object):
             account_balance["balance"] = raw_account.get("balance")
             account_balance["currency"] = raw_account.get("currency")
             account_balances.append(account_balance)
-        return account_balances
+        self.account_balances = Accounts(account_balances)
+        return self.account_balances
 
     def quote(self, from_amount, to_currency):
         if type(from_amount) != Amount:
@@ -196,3 +201,36 @@ class Revolut(object):
             raise ConnectionError("Transaction error : %s" % ret.text)
 
         return exchanged_amount
+
+
+class Accounts(object):
+    """ Class to handle the account balances """
+    def __init__(self, account_balances):
+        self.raw_list = account_balances
+        self.list = []
+        for account in self.raw_list:
+            self.list.append(Amount(currency=account.get("currency"),
+                                    revolut_amount=account.get("balance")))
+
+    def __len__(self):
+        return len(self.list)
+
+    def __getitem__(self, key):
+        """ Méthod to access the object as a list
+        (ex : accounts[1]) """
+        return self.list[key]
+
+    def csv(self, lang="fr"):
+        if lang == "fr":
+            csv_str = "Nom du compte;Solde;Devise"
+        else:
+            csv_str = "Account name,Balance,Currency"
+
+        for account in self.list:
+            csv_str += ('\n{currency} wallet,{balance},{currency}'.format(
+                    currency=account.currency,
+                    balance=account.real_amount_str))
+        if lang == "fr":
+            # In the French Excel, csv are like "pi;3,14" (not "pi,3.14")
+            csv_str = csv_str.replace(",", ";").replace(".", ",")
+        return csv_str
