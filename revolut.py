@@ -37,6 +37,10 @@ from revolut import Revolut, __version__
     help='csv output language ("fr" or "en")',
     default='fr'
 )
+@click.version_option(
+    version=__version__,
+    message='%(prog)s, based on [revolut] package version %(version)s'
+)
 def main(deviceid, token, language):
     """ Get the account balances on Revolut """
     rev = Revolut(device_id=deviceid, token=token)
