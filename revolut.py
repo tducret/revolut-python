@@ -24,16 +24,25 @@ from revolut import Revolut, __version__
     help='your Revolut token',
     prompt='your Revolut token'
 )
-@click.version_option(
-    version=__version__,
-    message='%(prog)s, based on [revolut] package version %(version)s'
+@click.option(
+    '--token', '-t',
+    envvar="REVOLUT_TOKEN",
+    type=str,
+    help='your Revolut token',
+    prompt='your Revolut token'
 )
-def main(deviceid, token):
+@click.option(
+    '--language', '-l',
+    type=str,
+    help='csv output language ("fr" or "en")',
+    default='fr'
+)
+def main(deviceid, token, language):
     """ Get the account balances on Revolut """
     rev = Revolut(device_id=deviceid, token=token)
     account_balances = rev.get_account_balances()
 
-    print(account_balances.csv())
+    print(account_balances.csv(lang=language))
 
 
 if __name__ == "__main__":
