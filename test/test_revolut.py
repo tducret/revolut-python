@@ -8,7 +8,8 @@ import os
 _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
                          "AED", "EUR", "JPY", "ZAR", "NZD", "HKD", "TRY",
-                         "QAR", "NOK", "SEK", "BTC"]
+                         "QAR", "NOK", "SEK", "BTC", "ETH", "XRP", "BCH",
+                         "LTC"]
 
 _DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
 _TOKEN = os.environ.get('REVOLUT_TOKEN', None)
@@ -43,12 +44,12 @@ def test_class_Amount_errors():
         Amount(currency="BTC")
 
 
-def test_get_accounts():
-    accounts = revolut.get_accounts()
+def test_get_account_balances():
+    accounts = revolut.get_account_balances()
     assert len(accounts) > 0
 
     print()
-    print(f'[{len(accounts)} accounts]')
+    print('[{} accounts]'.format(len(accounts)))
 
     for compte in accounts:
         assert type(compte) == dict
@@ -60,33 +61,29 @@ def test_get_accounts():
         print(balance)
 
 
-def test_get_last_transaction_from_csv():
-    last_tr = revolut.get_last_transaction_from_csv(
-        filename="exchange_history.csv")
-    assert type(last_tr) == dict
-    assert len(last_tr['date'].split("/")) == 3
-    assert len(last_tr['hour'].split(":")) == 3
-    assert type(last_tr['from_amount']) == float
-    assert type(last_tr['to_amount']) == float
-    assert last_tr['from_currency'] in _AVAILABLE_CURRENCIES
-    assert last_tr['to_currency'] in _AVAILABLE_CURRENCIES
-
-
-def test_write_a_transaction_to_csv():
-    assert revolut.write_a_transaction_to_csv(filename="exchange_history.csv")
-
-
 def test_quote():
     eur_to_btc = Amount(real_amount=5508.85, currency="EUR")
     quote_eur_btc = revolut.quote(from_amount=eur_to_btc, to_currency="BTC")
     assert type(quote_eur_btc) == Amount
     print()
-    print(f'{eur_to_btc} => {quote_eur_btc}')
+    print('{} => {}'.format(eur_to_btc, eur_to_btc))
 
     btc_to_eur = Amount(real_amount=1, currency="BTC")
     quote_btc_eur = revolut.quote(from_amount=btc_to_eur, to_currency="EUR")
     assert type(quote_btc_eur) == Amount
-    print(f'{btc_to_eur} => {quote_btc_eur}')
+    print('{} => {}'.format(btc_to_eur, quote_btc_eur))
+
+
+def test_quote_commission():
+    currency1 = "BTC"
+    currency2 = "EUR"
+    step1 = Amount(real_amount=1, currency=currency1)
+    step2 = revolut.quote(from_amount=step1, to_currency=currency2)
+    step3 = revolut.quote(from_amount=step2, to_currency=currency1)
+    print()
+    comm_rate = 1-(step3.real_amount/step1.real_amount)
+    print('Commission {}<->{} {:.2%}'.format(currency1, currency2, comm_rate))
+    assert comm_rate < 0.05
 
 
 def test_quote_errors():
@@ -108,7 +105,7 @@ def test_exchange():
                                             simulate=_SIMU_EXCHANGE)
     assert type(exchange_transaction) == Amount
     print()
-    print(f'{eur_to_btc} => {exchange_transaction} : exchange OK')
+    print('{} => {} : exchange OK'.format(eur_to_btc, exchange_transaction))
 
 
 def test_exchange_errors():

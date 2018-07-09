@@ -6,6 +6,8 @@ import requests
 import json
 from urllib.parse import urljoin
 
+__version__ = '0.0.1'  # Should be the same in setup.py
+
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
 _URL_EXCHANGE = "https://api.revolut.com/exchange"
@@ -13,7 +15,8 @@ _URL_EXCHANGE = "https://api.revolut.com/exchange"
 _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
                          "AED", "EUR", "JPY", "ZAR", "NZD", "HKD", "TRY",
-                         "QAR", "NOK", "SEK", "BTC"]
+                         "QAR", "NOK", "SEK", "BTC", "ETH", "XRP", "BCH",
+                         "LTC"]
 
 # The amounts are stored as integer on Revolut.
 # They apply a scale factor depending on the currency
@@ -32,14 +35,14 @@ class Amount(object):
         self.currency = currency
 
         if revolut_amount is not None:
-            if type(revolut_amount) not in [int]:
+            if type(revolut_amount) != int:
                 raise TypeError(type(revolut_amount))
             self.revolut_amount = revolut_amount
             self.real_amount = self.get_real_amount()
         elif real_amount is not None:
-            if type(real_amount) not in [int, float]:
+            if type(real_amount) not in [float, int]:
                 raise TypeError(type(real_amount))
-            self.real_amount = real_amount
+            self.real_amount = float(real_amount)
             self.revolut_amount = self.get_revolut_amount()
         else:
             raise ValueError("revolut_amount or real_amount must be set")
@@ -62,7 +65,7 @@ class Amount(object):
         """
         scale = _SCALE_FACTOR_CURRENCY_DICT.get(
                 self.currency, _DEFAULT_SCALE_FACTOR)
-        return (self.revolut_amount/scale)
+        return float(self.revolut_amount/scale)
 
     def get_revolut_amount(self):
         """ Get the Revolut amount from a real amount
@@ -72,7 +75,7 @@ class Amount(object):
         """
         scale = _SCALE_FACTOR_CURRENCY_DICT.get(
                 self.currency, _DEFAULT_SCALE_FACTOR)
-        return (self.real_amount*scale)
+        return int(self.real_amount*scale)
 
 
 class Client(object):
@@ -93,8 +96,9 @@ class Client(object):
     def _get(self, url):
         ret = self.session.get(url=url, headers=self.headers)
         if (ret.status_code != 200):
-            raise ConnectionError("Status code [%d] for url %s\n%s" %
-                                  (ret.status_code, url, ret.text))
+            raise ConnectionError(
+                'Status code {status} for url {url}\n{content}'.format(
+                    status=ret.status_code, url=url, content=ret.text))
         return ret
 
     def _post(self, url, post_data):
@@ -102,8 +106,9 @@ class Client(object):
                                 headers=self.headers,
                                 data=post_data)
         if (ret.status_code != 200):
-            raise ConnectionError("Status code [%d] for url %s\n%s" %
-                                  (ret.status_code, url, ret.text))
+            raise ConnectionError(
+                'Status code {status} for url {url}\n{content}'.format(
+                    status=ret.status_code, url=url, content=ret.text))
         return ret
 
 
@@ -111,28 +116,19 @@ class Revolut(object):
     def __init__(self, token, device_id):
         self.client = Client(token=token, device_id=device_id)
 
-    def get_accounts(self):
-        """ Get the account balance for each currency """
+    def get_account_balances(self):
+        """ Get the account balance for each currency
+        and returns it as a dict {"balance":XXXX, "currency":XXXX} """
         ret = self.client._get(_URL_GET_ACCOUNTS)
         raw_accounts = json.loads(ret.text)
 
-        accounts = []
+        account_balances = []
         for raw_account in raw_accounts.get("pockets"):
-            account = {}
-            account["balance"] = raw_account.get("balance")
-            account["currency"] = raw_account.get("currency")
-            accounts.append(account)
-        return accounts
-
-    def get_last_transaction_from_csv(self, filename="exchange_history.csv"):
-        return {
-                    'date': '07/07/2018',
-                    'hour': '08:45:30',
-                    'from_amount': 0.00003555,
-                    'from_currency': 'BTC',
-                    'to_amount': 20.55,
-                    'to_currency': 'EUR',
-                }
+            account_balance = {}
+            account_balance["balance"] = raw_account.get("balance")
+            account_balance["currency"] = raw_account.get("currency")
+            account_balances.append(account_balance)
+        return account_balances
 
     def quote(self, from_amount, to_currency):
         if type(from_amount) != Amount:
@@ -141,10 +137,10 @@ class Revolut(object):
         if to_currency not in _AVAILABLE_CURRENCIES:
                 raise KeyError(to_currency)
 
-        url_quote = urljoin(_URL_QUOTE, ("%s%s?amount=%d&side=SELL" %
-                                         (from_amount.currency,
-                                          to_currency,
-                                          from_amount.revolut_amount)))
+        url_quote = urljoin(_URL_QUOTE, '{}{}?amount={}&side=SELL'.format(
+            from_amount.currency,
+            to_currency,
+            from_amount.revolut_amount))
         ret = self.client._get(url_quote)
         raw_quote = json.loads(ret.text)
         quote_obj = Amount(revolut_amount=raw_quote["to"]["amount"],
@@ -200,6 +196,3 @@ class Revolut(object):
             raise ConnectionError("Transaction error : %s" % ret.text)
 
         return exchanged_amount
-
-    def write_a_transaction_to_csv(self, filename):
-        return True
