@@ -6,9 +6,34 @@ Non-official client for the [Revolut Bank](https://www.revolut.com/)
 
 ## Requirements
 
-- `REVOLUT_DEVICE_ID` and `REVOLUT_TOKEN` needs to be defined in the environment variables
+- python 3
 
-## Use
+## CLI tool : revolut.py
+
+```bash
+Usage: revolut.py [OPTIONS]
+
+  Get the account balances on Revolut
+
+Options:
+  -d, --deviceid TEXT  your device id (or set the env var REVOLUT_DEVICE_ID)
+  -t, --token TEXT     your Revolut token (or set the env var REVOLUT_TOKEN)
+  -l, --language TEXT  language ("fr" or "en"), for the csv header and
+                       separator
+  --version            Show the version and exit.
+  --help               Show this message and exit.
+ ```
+
+ Example output :
+
+ ```csv
+Account name,Balance,Currency
+EUR wallet,100.50,EUR
+GBP wallet,20.00,GBP
+USD wallet,0.00,USD
+AUD wallet,0.00,AUD
+BTC wallet,0.00123456,BTC
+```
 
 ## TODO
 

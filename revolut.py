@@ -14,27 +14,20 @@ from revolut import Revolut, __version__
     '--deviceid', '-d',
     envvar="REVOLUT_DEVICE_ID",
     type=str,
-    help='your device id',
+    help='your device id (or set the env var REVOLUT_DEVICE_ID)',
     prompt='your device id'
 )
 @click.option(
     '--token', '-t',
     envvar="REVOLUT_TOKEN",
     type=str,
-    help='your Revolut token',
-    prompt='your Revolut token'
-)
-@click.option(
-    '--token', '-t',
-    envvar="REVOLUT_TOKEN",
-    type=str,
-    help='your Revolut token',
+    help='your Revolut token (or set the env var REVOLUT_TOKEN)',
     prompt='your Revolut token'
 )
 @click.option(
     '--language', '-l',
     type=str,
-    help='csv output language ("fr" or "en")',
+    help='language ("fr" or "en"), for the csv header and separator',
     default='fr'
 )
 @click.version_option(
