@@ -9,9 +9,16 @@
 
 Non-official client for the [Revolut Bank](https://www.revolut.com/)
 
-## Requirements
+# Requirements
 
-- python 3
+- Python 3
+- pip3
+
+# Installation
+
+```bash
+pip3 install -U revolut
+```
 
 ## CLI tool : revolut_cli.py
 
