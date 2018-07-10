@@ -1,5 +1,9 @@
 # revolut-python
 
+[![Travis](https://img.shields.io/travis/tducret/revolut-python.svg)](https://travis-ci.org/tducret/revolut-python)
+[![Coveralls github](https://img.shields.io/coveralls/github/tducret/revolut-python.svg)](https://coveralls.io/github/tducret/revolut-python)
+![License](https://img.shields.io/github/license/tducret/revolut-python.svg)
+
 # Description
 
 Non-official client for the [Revolut Bank](https://www.revolut.com/)
