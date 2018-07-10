@@ -11,9 +11,9 @@ __version__ = '0.0.1'  # Should match with __init.py__
 _NOM_PACKAGE = 'revolut'
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
 _DESCRIPTION = 'Package to get account balances and do operations on Revolut'
-_MOTS_CLES = ['api', 'revolut', 'bank', 'parsing',
+_MOTS_CLES = ['api', 'revolut', 'bank', 'parsing', 'cli',
               'python-wrapper', 'scraping', 'scraper', 'parser']
-_SCRIPTS = ['revolut.py']
+_SCRIPTS = ['revolut_cli.py']
 # To delete here + 'scripts' dans setup()
 # if no command is used in the package
 

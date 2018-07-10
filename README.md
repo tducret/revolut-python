@@ -8,10 +8,10 @@ Non-official client for the [Revolut Bank](https://www.revolut.com/)
 
 - python 3
 
-## CLI tool : revolut.py
+## CLI tool : revolut_cli.py
 
 ```bash
-Usage: revolut.py [OPTIONS]
+Usage: revolut_cli.py [OPTIONS]
 
   Get the account balances on Revolut
 

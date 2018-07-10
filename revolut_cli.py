@@ -4,8 +4,8 @@ import click
 from revolut import Revolut, __version__
 
 # Use
-# revolut.py --deviceid <device_id> --token <token>
-# revolut.py (with environment variables set :
+# revolut_cli.py --deviceid <device_id> --token <token>
+# revolut_cli (with environment variables set :
 # REVOLUT_DEVICE_ID, REVOLUT_TOKEN)
 
 
