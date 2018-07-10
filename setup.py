@@ -47,7 +47,7 @@ setup(
 # ------------------------------------------
 # Make sure everything was pushed (with a git status)
 # (or git commit --am "Comment" and git push)
-# git tag 0.0.1 -m "First version"
+# git tag 0.0.2 -m "Same as 0.0.1, with auto deploy to Pypi"
 # git push --tags
 
 # Do a generation test on the pypi test repository
