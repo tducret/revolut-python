@@ -7,7 +7,7 @@ except ImportError:  # For pip <= 9
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
-__version__ = '0.0.1'  # Should match with __init.py__
+__version__ = '0.0.2'  # Should match with __init.py__
 _NOM_PACKAGE = 'revolut'
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
 _DESCRIPTION = 'Package to get account balances and do operations on Revolut'
