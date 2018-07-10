@@ -13,3 +13,10 @@ script:
   - pytest # or py.test for Python versions 3.5 and below
 after_success:
   coveralls
+deploy:
+  provider: pypi
+  user: "thibdct"
+  password:
+    secure: EMZUqHnzam5VV0nQEvRpoaOwcto+7vZNCxeF6JU11wQmHKeHF6zPDuzMPDBw1HYmMosdz33oHqah0BiEEQPrLnKRfawqSUSTzenggHjRbAOkkK/5pW4RDRN3Qg6h8uOj+P4RYSdN7aCtUm2+R96QQWwRBoYRIHTiuU8Nk6GebHl41z0g+c4INolg7aiD0gpcvDsD80ICzF8h97KG+nstGd/OVHFdMSfsvjB2C7Yx8Zf3xigsrmKD9CXq+rXetjjzTxvDFx9XBL9pg3PIwPVUXu5hcFxPYxFb0eRQLDteo9C5SrrnOHUiAElS0n+sCdazkt0RZb0IvsmaMPue2rc1MO4kyf5nynlsCtRTuXU6zT4GYKPazq/8Yg6wHBTGt5U1xdQW3Vg9bBziW6JvBurdLlYs44qgB0IRTc2xnSGLAdoWLCFgeCmajKlS5qhXeGd1+D9Qs4UlANde/gR48dEHfYKIKvvlhBpvoPSdC4VoFTSExPV/7Kt9EnPeny7jI2TQbjOIdLyn1aCA3IN4dxIBNT3r45ML4ef/4JVvS3gg3XIRjsncHQo7zwN0gcEXt8DkVEH1R5cwY/y4UOA9c11kjWe3UkhXN2QEgGAolTdCws5ocfCGpoBQeUcsf1knHr+VfN9ATUCXEp1k3+PpLKTPg/ogBstW68bfmvyWUpAaLr4=
+  on:
+    tags: true
