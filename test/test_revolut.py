@@ -1,6 +1,7 @@
 from revolut import Amount
 from revolut import Accounts
 from revolut import Revolut
+from revolut import Client
 import pytest
 import os
 
@@ -40,6 +41,9 @@ def test_class_Amount_errors():
 
     with pytest.raises(TypeError):
         Amount(revolut_amount="abc", currency="BTC")
+
+    with pytest.raises(TypeError):
+        Amount(real_amount="def", currency="EUR")
 
     with pytest.raises(ValueError):
         Amount(currency="BTC")
@@ -157,3 +161,8 @@ BTC wallet;0,01000000;BTC"
 EUR wallet,100.00,EUR\n\
 USD wallet,5.50,USD\n\
 BTC wallet,0.01000000,BTC"
+
+def test_client_errors():
+    with pytest.raises(ConnectionError):
+        c = Client(device_id="unknown", token="unknown")
+        c._get("https://api.revolut.com/unknown_page")

@@ -85,10 +85,6 @@ class Amount(object):
 class Client(object):
     """ Do the requests with the Revolut servers """
     def __init__(self, token, device_id):
-        if token is None:
-            raise OSError('REVOLUT_TOKEN environment variable not set')
-        elif device_id is None:
-            raise OSError('REVOLUT_DEVICE_ID environment variable not set')
         self.session = requests.session()
         self.headers = {
                     'Host': 'api.revolut.com',
