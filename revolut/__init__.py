@@ -94,7 +94,7 @@ class Client(object):
                     'Host': 'api.revolut.com',
                     'X-Api-Version': '1',
                     'X-Device-Id': device_id,
-                    'Authorization': token,
+                    'Authorization': 'Basic '+token,
                     }
 
     def _get(self, url):
