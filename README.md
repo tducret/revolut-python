@@ -38,7 +38,7 @@ BTC wallet,0.00123456,BTC
 ## TODO
 
 - [x] Create a CLI tool to get the balance (like https://github.com/tducret/ingdirect-python)
-- [ ] Explain how to use the CLI tool
+- [x] Explain how to use the CLI tool
 - [ ] Create a tool to exchange automatically a currency when it grows
 - [ ] Create the PIP package
 - [ ] Create the Docker image
