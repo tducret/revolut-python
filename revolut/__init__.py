@@ -7,7 +7,7 @@ import json
 import base64
 from urllib.parse import urljoin
 
-__version__ = '0.0.3'  # Should be the same in setup.py
+__version__ = '0.0.4'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"

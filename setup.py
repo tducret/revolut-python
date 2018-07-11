@@ -7,7 +7,7 @@ except ImportError:  # For pip <= 9
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
-__version__ = '0.0.3'  # Should match with __init.py__
+__version__ = '0.0.4'  # Should match with __init.py__
 _NOM_PACKAGE = 'revolut'
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
 _DESCRIPTION = 'Package to get account balances and do operations on Revolut'
@@ -47,7 +47,8 @@ setup(
 # ------------------------------------------
 # Make sure everything was pushed (with a git status)
 # (or git commit --am "Comment" and git push)
-# git tag 0.0.3 -m "MANIFEST.in was missing :("
+# git tag 0.0.4 -m "Removed device-id option from CLI tool \
+# and implemented function to obtain token"
 # git push --tags
 
 # Do a generation test on the pypi test repository

@@ -55,3 +55,4 @@ If you don't have a Revolut token yet, the tool will allow you to obtain one.
 - [ ] Create a tool to exchange automatically a currency when it grows
 - [x] Create the PIP package
 - [x] Create the Docker image
+- [ ] Implement the function to get the last transactions
