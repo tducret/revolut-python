@@ -2,10 +2,11 @@ from revolut import Amount
 from revolut import Accounts
 from revolut import Revolut
 from revolut import Client
+from revolut import get_token_step1, get_token_step2
 import pytest
 import os
 
-# To best tested with : python -m pytest -vs
+# To best tested with : python -m pytest -vs test/test_revolut.py
 
 _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
@@ -17,6 +18,14 @@ _DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
 _TOKEN = os.environ.get('REVOLUT_TOKEN', None)
 
 _SIMU_EXCHANGE = True  # True = Do not execute a real currency exchange
+_SIMU_GET_TOKEN = True  # True = Do not try to get a real token
+# (sms reception involved)
+if _SIMU_GET_TOKEN is True:
+    _PHONE = "+33612345678"
+    _PASSWORD = "1234"
+else:
+    _PHONE = os.environ.get('REVOLUT_PHONE', None)
+    _PASSWORD = os.environ.get('REVOLUT_TOKEN', None)
 
 revolut = Revolut(token=_TOKEN, device_id=_DEVICE_ID)
 
@@ -162,7 +171,45 @@ EUR wallet,100.00,EUR\n\
 USD wallet,5.50,USD\n\
 BTC wallet,0.01000000,BTC"
 
+
 def test_client_errors():
     with pytest.raises(ConnectionError):
         c = Client(device_id="unknown", token="unknown")
         c._get("https://api.revolut.com/unknown_page")
+
+
+def test_get_token(capsys):
+    _DEVICE_ID_TEST = "cli"
+    get_token_step1(device_id=_DEVICE_ID_TEST,
+                    phone=_PHONE,
+                    password=_PASSWORD,
+                    simulate=_SIMU_GET_TOKEN)
+
+    if _SIMU_GET_TOKEN is True:
+        sms_code = "123456"
+    else:
+        with capsys.disabled():
+            print()
+            sms_code = input(
+                "Please enter the sms code sent to {} : ".format(_PHONE))
+
+    token = get_token_step2(device_id=_DEVICE_ID_TEST,
+                            phone=_PHONE,
+                            sms_code=sms_code,
+                            simulate=_SIMU_GET_TOKEN)
+    assert token != ""
+    print()
+    print("Your token is {}".format(token))
+
+    if _SIMU_GET_TOKEN is not True:
+        new_revolut = Revolut(token=token, device_id=_DEVICE_ID_TEST)
+
+        accounts = new_revolut.get_account_balances()
+        assert len(accounts) > 0
+
+        print()
+        print('[{} accounts]'.format(len(accounts)))
+
+        for account in accounts:
+            assert type(account) == Amount
+            print('{}'.format(account))

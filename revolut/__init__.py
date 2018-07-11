@@ -4,6 +4,7 @@
 
 import requests
 import json
+import base64
 from urllib.parse import urljoin
 
 __version__ = '0.0.3'  # Should be the same in setup.py
@@ -11,6 +12,10 @@ __version__ = '0.0.3'  # Should be the same in setup.py
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
 _URL_EXCHANGE = "https://api.revolut.com/exchange"
+_URL_GET_TOKEN_STEP1 = "https://api.revolut.com/signin"
+_URL_GET_TOKEN_STEP2 = "https://api.revolut.com/signin/confirm"
+
+_DEFAULT_TOKEN_FOR_SIGNIN = "QXBwOlM5V1VuU0ZCeTY3Z1dhbjc="
 
 _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
@@ -94,22 +99,23 @@ class Client(object):
                     'Host': 'api.revolut.com',
                     'X-Api-Version': '1',
                     'X-Device-Id': device_id,
+                    'User-Agent': 'Revolut/5.5 500500250 (CLI; Android 4.4.2)',
                     'Authorization': 'Basic '+token,
                     }
 
-    def _get(self, url):
+    def _get(self, url, expected_status_code=200):
         ret = self.session.get(url=url, headers=self.headers)
-        if (ret.status_code != 200):
+        if (ret.status_code != expected_status_code):
             raise ConnectionError(
                 'Status code {status} for url {url}\n{content}'.format(
                     status=ret.status_code, url=url, content=ret.text))
         return ret
 
-    def _post(self, url, post_data):
+    def _post(self, url, post_data, expected_status_code=200):
         ret = self.session.post(url=url,
                                 headers=self.headers,
                                 data=post_data)
-        if (ret.status_code != 200):
+        if (ret.status_code != expected_status_code):
             raise ConnectionError(
                 'Status code {status} for url {url}\n{content}'.format(
                     status=ret.status_code, url=url, content=ret.text))
@@ -234,3 +240,49 @@ class Accounts(object):
             # In the French Excel, csv are like "pi;3,14" (not "pi,3.14")
             csv_str = csv_str.replace(",", ";").replace(".", ",")
         return csv_str
+
+
+def get_token_step1(device_id, phone, password, simulate=False):
+    """ Function to obtain a Revolut token (step 1 : send a code by sms) """
+    if simulate:
+        ret = ""
+    else:
+        c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
+        data = '{"phone":"%s","password": "%s"}' % (phone, password)
+        ret = c._post(url=_URL_GET_TOKEN_STEP1,
+                      post_data=data,
+                      expected_status_code=204)
+    return ret
+
+
+def get_token_step2(device_id, phone, sms_code, simulate=False):
+    """ Function to obtain a Revolut token (step 2 : with sms code) """
+    if simulate:
+        # Because we don't want to receive a code through sms
+        # for every test ;)
+        simu = '{"user":{"id":"fakeuserid","createdDate":123456789,\
+        "address":{"city":"my_city","country":"FR","postcode":"12345",\
+        "region":"my_region","streetLine1":"1 rue mon adresse",\
+        "streetLine2":"Appt 1"},\"birthDate":[1980,1,1],"firstName":"John",\
+        "lastName":"Doe","phone":"+33612345678","email":"myemail@email.com",\
+        "emailVerified":false,"state":"ACTIVE","referralCode":"refcode",\
+        "kyc":"PASSED","termsVersion":"2018-05-25","underReview":false,\
+        "riskAssessed":false,"locale":"en-GB"},"wallet":{"id":"wallet_id",\
+        "ref":"12345678","state":"ACTIVE","baseCurrency":"EUR",\
+        "topupLimit":3000000,"totalTopup":0,"topupResetDate":123456789,\
+        "pockets":[{"id":"pocket_id","type":"CURRENT","state":"ACTIVE",\
+        "currency":"EUR","balance":100,"blockedAmount":0,"closed":false,\
+        "creditLimit":0}]},"accessToken":"myaccesstoken"}'
+        raw_get_token = json.loads(simu)
+    else:
+        c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
+        data = '{"phone":"%s","code": "%s"}' % (phone, sms_code)
+        ret = c._post(url=_URL_GET_TOKEN_STEP2, post_data=data)
+        raw_get_token = json.loads(ret.text)
+
+    user_id = raw_get_token["user"]["id"]
+    access_token = raw_get_token["accessToken"]
+    token_to_encode = '{}:{}'.format(user_id, access_token).encode('ascii')
+    # Ascii encoding required by b64encode function : 8 bits char as input
+    token = base64.b64encode(token_to_encode)
+    return token.decode('ascii')
