@@ -276,6 +276,7 @@ def get_token_step2(device_id, phone, sms_code, simulate=False):
         raw_get_token = json.loads(simu)
     else:
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
+        sms_code = sms_code.replace("-", "")  # If the user would put -
         data = '{"phone":"%s","code": "%s"}' % (phone, sms_code)
         ret = c._post(url=_URL_GET_TOKEN_STEP2, post_data=data)
         raw_get_token = json.loads(ret.text)

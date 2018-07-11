@@ -2,29 +2,23 @@
 # -*- coding: utf-8 -*-
 import click
 from revolut import Revolut, __version__
+from revolut import get_token_step1, get_token_step2
+import sys
 
 # Use
 # revolut_cli.py --deviceid <device_id> --token <token>
 # revolut_cli (with environment variables set :
 # REVOLUT_DEVICE_ID, REVOLUT_TOKEN)
 
+_CLI_DEVICE_ID = 'revolut_cli'
+
 
 @click.command()
-@click.option(
-    '--deviceid', '-d',
-    envvar="REVOLUT_DEVICE_ID",
-    type=str,
-    help='your device id (or set the env var REVOLUT_DEVICE_ID)',
-    prompt='your device id',
-    required=True,
-)
 @click.option(
     '--token', '-t',
     envvar="REVOLUT_TOKEN",
     type=str,
     help='your Revolut token (or set the env var REVOLUT_TOKEN)',
-    prompt='your Revolut token',
-    required=True,
 )
 @click.option(
     '--language', '-l',
@@ -36,9 +30,46 @@ from revolut import Revolut, __version__
     version=__version__,
     message='%(prog)s, based on [revolut] package version %(version)s'
 )
-def main(deviceid, token, language):
+def main(token, language):
     """ Get the account balances on Revolut """
-    rev = Revolut(device_id=deviceid, token=token)
+    if token is None:
+        print("You don't seem to have a Revolut token")
+        answer = input("Would you like to generate a token [yes/no] ? ")
+        if answer.lower() == "yes":
+            phone = input("What is your mobile phone \
+(used with your Revolut account) [ex : +33612345678] ? ")
+            password = input("What is your Revolut app password \
+[ex : 1234] ? ")
+            get_token_step1(device_id=_CLI_DEVICE_ID,
+                            phone=phone,
+                            password=password)
+
+            sms_code = input("Please enter the sms code you received\
+[ex : 123456] : ")
+
+            token = get_token_step2(device_id=_CLI_DEVICE_ID,
+                                    phone=phone,
+                                    sms_code=sms_code)
+            token_str = "Your token is {}".format(token)
+            print()
+            print(len(token_str)*"-")
+            print(token_str)
+            print(len(token_str)*"-")
+            print()
+            print("You may use it with the --token of this command \
+or set the environment variable in your ~/.bash_profile or ~/.bash_rc, \
+for example :")
+            print()
+            print("revolut_cli.py --token={}".format(token))
+            print("or")
+            print(('echo "export REVOLUT_TOKEN={}" \
+>> ~/.bash_profile').format(token))
+            sys.exit()
+        else:
+            print("OK. Goodbye")
+            sys.exit()
+
+    rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
     account_balances = rev.get_account_balances()
 
     print(account_balances.csv(lang=language))
