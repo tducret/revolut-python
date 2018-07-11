@@ -13,6 +13,38 @@ import sys
 _CLI_DEVICE_ID = 'revolut_cli'
 
 
+def get_token():
+    phone = input("What is your mobile phone \
+(used with your Revolut account) [ex : +33612345678] ? ")
+    password = input("What is your Revolut app password \
+[ex : 1234] ? ")
+    get_token_step1(device_id=_CLI_DEVICE_ID,
+                    phone=phone,
+                    password=password)
+
+    sms_code = input("Please enter the sms code you received\
+[ex : 123456] : ")
+
+    token = get_token_step2(device_id=_CLI_DEVICE_ID,
+                            phone=phone,
+                            sms_code=sms_code)
+    token_str = "Your token is {}".format(token)
+    print()
+    print(len(token_str)*"-")
+    print(token_str)
+    print(len(token_str)*"-")
+    print()
+    print("You may use it with the --token of this command \
+or set the environment variable in your ~/.bash_profile or ~/.bash_rc, \
+for example :")
+    print()
+    print("revolut_cli.py --token={}".format(token))
+    print("or")
+    print(('echo "export REVOLUT_TOKEN={}" \
+>> ~/.bash_profile').format(token))
+    return
+
+
 @click.command()
 @click.option(
     '--token', '-t',
@@ -36,34 +68,7 @@ def main(token, language):
         print("You don't seem to have a Revolut token")
         answer = input("Would you like to generate a token [yes/no] ? ")
         if answer.lower() == "yes":
-            phone = input("What is your mobile phone \
-(used with your Revolut account) [ex : +33612345678] ? ")
-            password = input("What is your Revolut app password \
-[ex : 1234] ? ")
-            get_token_step1(device_id=_CLI_DEVICE_ID,
-                            phone=phone,
-                            password=password)
-
-            sms_code = input("Please enter the sms code you received\
-[ex : 123456] : ")
-
-            token = get_token_step2(device_id=_CLI_DEVICE_ID,
-                                    phone=phone,
-                                    sms_code=sms_code)
-            token_str = "Your token is {}".format(token)
-            print()
-            print(len(token_str)*"-")
-            print(token_str)
-            print(len(token_str)*"-")
-            print()
-            print("You may use it with the --token of this command \
-or set the environment variable in your ~/.bash_profile or ~/.bash_rc, \
-for example :")
-            print()
-            print("revolut_cli.py --token={}".format(token))
-            print("or")
-            print(('echo "export REVOLUT_TOKEN={}" \
->> ~/.bash_profile').format(token))
+            get_token()
             sys.exit()
         else:
             print("OK. Goodbye")
