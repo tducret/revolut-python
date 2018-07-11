@@ -24,6 +24,10 @@ _DEFAULT_SCALE_FACTOR = 100
 _SCALE_FACTOR_CURRENCY_DICT = {
                                 "EUR": 100,
                                 "BTC": 100000000,
+                                "ETH": 100000000,
+                                "BCH": 100000000,
+                                "XRP": 100000000,
+                                "LTC": 100000000,
                                }
 
 
@@ -51,7 +55,7 @@ class Amount(object):
 
     def get_real_amount_str(self):
         """ Get the real amount with the proper format, without currency """
-        if self.currency == "BTC":
+        if self.currency in ["BTC", "ETH", "BCH", "XRP", "LTC"]:
             digits_after_float = 8
         else:
             digits_after_float = 2

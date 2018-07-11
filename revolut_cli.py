@@ -15,14 +15,16 @@ from revolut import Revolut, __version__
     envvar="REVOLUT_DEVICE_ID",
     type=str,
     help='your device id (or set the env var REVOLUT_DEVICE_ID)',
-    prompt='your device id'
+    prompt='your device id',
+    required=True,
 )
 @click.option(
     '--token', '-t',
     envvar="REVOLUT_TOKEN",
     type=str,
     help='your Revolut token (or set the env var REVOLUT_TOKEN)',
-    prompt='your Revolut token'
+    prompt='your Revolut token',
+    required=True,
 )
 @click.option(
     '--language', '-l',
