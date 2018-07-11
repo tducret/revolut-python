@@ -28,7 +28,6 @@ Usage: revolut_cli.py [OPTIONS]
   Get the account balances on Revolut
 
 Options:
-  -d, --deviceid TEXT  your device id (or set the env var REVOLUT_DEVICE_ID)
   -t, --token TEXT     your Revolut token (or set the env var REVOLUT_TOKEN)
   -l, --language TEXT  language ("fr" or "en"), for the csv header and
                        separator
@@ -47,10 +46,12 @@ AUD wallet,0.00,AUD
 BTC wallet,0.00123456,BTC
 ```
 
+If you don't have a Revolut token yet, the tool will allow you to obtain one.
+
 ## TODO
 
 - [x] Create a CLI tool to get the balance (like https://github.com/tducret/ingdirect-python)
 - [x] Explain how to use the CLI tool
 - [ ] Create a tool to exchange automatically a currency when it grows
-- [ ] Create the PIP package
-- [ ] Create the Docker image
+- [x] Create the PIP package
+- [x] Create the Docker image
