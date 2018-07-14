@@ -6,7 +6,7 @@ from revolut import get_token_step1, get_token_step2
 import pytest
 import os
 
-# To best tested with : python -m pytest -vs test/test_revolut.py
+# To be tested with : python -m pytest -vs test/test_revolut.py
 
 _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
