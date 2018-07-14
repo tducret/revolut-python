@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-""" This package allows you to communicate with yout Revolut accounts
+"""
+This package allows you to communicate with your Revolut accounts
 """
 
 import requests

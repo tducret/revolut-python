@@ -84,9 +84,9 @@ def test_quote():
 
 
 def test_quote_commission():
-    currency1 = "BTC"
+    currency1 = "USD"
     currency2 = "EUR"
-    step1 = Amount(real_amount=1, currency=currency1)
+    step1 = Amount(real_amount=5000, currency=currency1)
     step2 = revolut.quote(from_amount=step1, to_currency=currency2)
     step3 = revolut.quote(from_amount=step2, to_currency=currency1)
     print()
