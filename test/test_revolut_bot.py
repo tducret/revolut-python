@@ -1,16 +1,13 @@
 import revolut_bot
-from revolut_bot import Transaction
-from revolut import Amount
+from revolut import Amount, Transaction
 from datetime import datetime
 import pytest
+import os
 
 # To be tested with : python -m pytest -vs test/test_revolut_bot.py
 
-_AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
-                         "SGD", "CHF", "AUD", "ILS", "DKK", "PLN", "MAD",
-                         "AED", "EUR", "JPY", "ZAR", "NZD", "HKD", "TRY",
-                         "QAR", "NOK", "SEK", "BTC", "ETH", "XRP", "BCH",
-                         "LTC"]
+_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
+_TOKEN = os.environ.get('REVOLUT_TOKEN', None)
 
 
 def test_class_Transaction():
@@ -63,14 +60,50 @@ def test_get_last_transactions_from_csv_errors():
             separator="BAD_SEPARATOR")
 
 
-# def test_write_a_transaction_to_csv():
-#     tr1 = Transaction(from_amount=Amount(real_amount=10, currency="USD"),
-#                       to_amount=Amount(real_amount=8.66, currency="EUR"),
-#                       date="10/07/18 16:30")
-#     tr2 = Transaction(from_amount=Amount(real_amount=8.66, currency="EUR"),
-#                       to_amount=Amount(real_amount=10.51, currency="USD"),
-#                       date="11/07/18 09:30")
-#     revolut_bot.write_a_transaction_to_csv(
-#         filename="new_exchange_history.csv")
-#     assert revolut_bot.write_a_transaction_to_csv(
-#         filename="new_exchange_history.csv")
+def test_csv_functions():
+    _TEST_CSV_FILENAME = "test_file.csv"
+    with open(_TEST_CSV_FILENAME, "w") as f:
+        f.write("a,b,c\n")
+        f.write("1,2,3\n")
+        f.write("4,5,6\n")
+    csv_str = revolut_bot.read_file_to_str(_TEST_CSV_FILENAME)
+    assert csv_str == "a,b,c\n1,2,3\n4,5,6\n"
+
+    csv_dict = revolut_bot.csv_to_dict(csv_str)
+    assert csv_dict == [{"a": "1", "b": "2", "c": "3"},
+                        {"a": "4", "b": "5", "c": "6"}]
+
+    new_csv_dict = {"a": "7", "b": "8", "c": "9"}
+    revolut_bot.append_dict_to_csv(
+                        filename=_TEST_CSV_FILENAME,
+                        dict_obj=new_csv_dict, separator=",",
+                        col_names=["a", "b", "c"])
+    csv_str = revolut_bot.read_file_to_str(_TEST_CSV_FILENAME)
+    assert csv_str == "a,b,c\n1,2,3\n4,5,6\n7,8,9\n"
+
+    csv_dict = revolut_bot.csv_to_dict(csv_str)
+    assert csv_dict == [{"a": "1", "b": "2", "c": "3"},
+                        {"a": "4", "b": "5", "c": "6"},
+                        {"a": "7", "b": "8", "c": "9"}]
+
+    os.remove(_TEST_CSV_FILENAME)
+
+
+def test_get_amount_with_margin():
+    amount = Amount(real_amount=10, currency="USD")
+    percent_margin = 1  # 1%
+    amount_with_margin = revolut_bot.get_amount_with_margin(
+                                    amount=amount,
+                                    percent_margin=percent_margin)
+    assert type(amount_with_margin) == Amount
+    assert amount_with_margin.real_amount == 10.1
+    assert amount_with_margin.currency == "USD"
+
+
+def test_get_amount_with_margin_errors():
+    with pytest.raises(TypeError):
+        revolut_bot.get_amount_with_margin(amount=10, percent_margin=1)
+    with pytest.raises(TypeError):
+        revolut_bot.get_amount_with_margin(
+                                amount=Amount(real_amount=10, currency="USD"),
+                                percent_margin="1%")
