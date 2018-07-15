@@ -4,31 +4,12 @@ This package allows you to control the Revolut bot
 """
 
 import csv
-from revolut import Amount
+from revolut import Amount, Transaction
 from datetime import datetime
 import io
 
 _CSV_COLUMNS = ["date", "hour", "from_amount", "from_currency",
                 "to_amount", "to_currency"]
-
-
-class Transaction(object):
-    """ Class to handle an exchange transaction """
-    def __init__(self, from_amount, to_amount, date):
-        if type(from_amount) != Amount:
-            raise TypeError
-        if type(to_amount) != Amount:
-            raise TypeError
-        if type(date) != datetime:
-            raise TypeError
-        self.from_amount = from_amount
-        self.to_amount = to_amount
-        self.date = date
-
-    def __str__(self):
-        return('({}) {} => {}'.format(self.date.strftime("%d/%m/%Y %H:%M:%S"),
-                                      self.from_amount,
-                                      self.to_amount))
 
 
 def csv_to_dict(csv_str, separator=","):
@@ -45,6 +26,36 @@ def csv_to_dict(csv_str, separator=","):
         dict_list.append(dict(line))
         # By default, DictReader returns OrderedDict => convert to dict
     return dict_list
+
+
+def append_dict_to_csv(filename, dict_obj, separator=",",
+                       col_names=_CSV_COLUMNS):
+    """ Append a dict object, to a csv file """
+    with open(filename, 'a', newline='\n') as csvfile:
+        writer = csv.DictWriter(csvfile,
+                                delimiter=separator,
+                                fieldnames=col_names,
+                                lineterminator='\n')  # To avoid '^M'
+        writer.writerow(dict_obj)
+    return
+
+
+def convert_Transaction_to_dict(transaction_obj):
+    tr_dict = {}
+    tr_dict["date"] = transaction_obj.date.strftime("%d/%m/%Y")
+    tr_dict["hour"] = transaction_obj.date.strftime("%H:%M:%S")
+    tr_dict["from_amount"] = transaction_obj.from_amount.real_amount
+    tr_dict["from_currency"] = transaction_obj.from_amount.currency
+    tr_dict["to_amount"] = transaction_obj.to_amount.real_amount
+    tr_dict["to_currency"] = transaction_obj.to_amount.currency
+    return tr_dict
+
+
+def update_historyfile(filename, exchange_transaction):
+    """ Update the history file with an exchange transaction """
+    tr_dict = convert_Transaction_to_dict(transaction_obj=exchange_transaction)
+    append_dict_to_csv(filename=filename, dict_obj=tr_dict)
+    return
 
 
 def read_file_to_str(filename):
@@ -83,5 +94,22 @@ def dict_transaction_to_Transaction(tr_dict):
     return tr
 
 
-def write_a_transaction_to_csv(filename):
+def get_amount_with_margin(amount, percent_margin):
+    """ Returns the amount with a margin
+>>> print(get_amount_with_margin(amount=Amount(real_amount=100,\
+currency="EUR"), percent_margin=1))
+101.00 EUR
+"""
+    if type(amount) != Amount:
+        raise TypeError
+    if type(percent_margin) not in [float, int]:
+        raise TypeError
+    margin = percent_margin/100
+
+    amount_with_margin = amount.real_amount * (1 + margin)
+
+    return Amount(real_amount=amount_with_margin, currency=amount.currency)
+
+
+def append_a_transaction_to_csv(filename):
     return True
