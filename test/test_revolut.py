@@ -1,7 +1,4 @@
-from revolut import Amount
-from revolut import Accounts
-from revolut import Revolut
-from revolut import Client
+from revolut import Amount, Accounts, Transaction, Revolut, Client
 from revolut import get_token_step1, get_token_step2
 import pytest
 import os
@@ -112,7 +109,7 @@ def test_exchange():
     exchange_transaction = revolut.exchange(from_amount=eur_to_btc,
                                             to_currency="BTC",
                                             simulate=_SIMU_EXCHANGE)
-    assert type(exchange_transaction) == Amount
+    assert type(exchange_transaction) == Transaction
     print()
     print('{} => {} : exchange OK'.format(eur_to_btc, exchange_transaction))
 
