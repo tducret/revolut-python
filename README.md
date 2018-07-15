@@ -59,3 +59,4 @@ If you don't have a Revolut token yet, the tool will allow you to obtain one.
 - [ ] Document revolutbot.py
 - [ ] Add revolutbot to the revolut Pypi package
 - [ ] Create a RaspberryPi Dockerfile for revolutbot (to check if rates grows very often)
+- [ ] Improve coverage for revolutbot
