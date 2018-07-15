@@ -5,10 +5,7 @@ from revolut import Revolut, __version__
 from revolut import get_token_step1, get_token_step2
 import sys
 
-# Use
-# revolut_cli.py --deviceid <device_id> --token <token>
-# revolut_cli (with environment variables set :
-# REVOLUT_DEVICE_ID, REVOLUT_TOKEN)
+# Usage : revolut_cli.py --help
 
 _CLI_DEVICE_ID = 'revolut_cli'
 
