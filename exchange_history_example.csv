@@ -1,0 +1,3 @@
+date,hour,from_amount,from_currency,to_amount,to_currency
+01/01/2018,09:00:00,100.00,USD,86.66,EUR
+05/01/2018,19:00:00,86.66,EUR,102.00,USD
