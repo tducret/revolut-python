@@ -7,6 +7,7 @@ import requests
 import json
 import base64
 from urllib.parse import urljoin
+from datetime import datetime
 
 __version__ = '0.0.4'  # Should be the same in setup.py
 
@@ -94,6 +95,25 @@ class Amount(object):
         scale = _SCALE_FACTOR_CURRENCY_DICT.get(
                 self.currency, _DEFAULT_SCALE_FACTOR)
         return int(self.real_amount*scale)
+
+
+class Transaction(object):
+    """ Class to handle an exchange transaction """
+    def __init__(self, from_amount, to_amount, date):
+        if type(from_amount) != Amount:
+            raise TypeError
+        if type(to_amount) != Amount:
+            raise TypeError
+        if type(date) != datetime:
+            raise TypeError
+        self.from_amount = from_amount
+        self.to_amount = to_amount
+        self.date = date
+
+    def __str__(self):
+        return('({}) {} => {}'.format(self.date.strftime("%d/%m/%Y %H:%M:%S"),
+                                      self.from_amount,
+                                      self.to_amount))
 
 
 class Client(object):
@@ -208,10 +228,13 @@ class Revolut(object):
             currency = raw_exchange[0]["counterpart"]["currency"]
             exchanged_amount = Amount(revolut_amount=amount,
                                       currency=currency)
+            exchange_transaction = Transaction(from_amount=from_amount,
+                                               to_amount=exchanged_amount,
+                                               date=datetime.now())
         else:
             raise ConnectionError("Transaction error : %s" % ret.text)
 
-        return exchanged_amount
+        return exchange_transaction
 
 
 class Accounts(object):
