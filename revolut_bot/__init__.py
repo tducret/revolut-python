@@ -109,7 +109,3 @@ currency="EUR"), percent_margin=1))
     amount_with_margin = amount.real_amount * (1 + margin)
 
     return Amount(real_amount=amount_with_margin, currency=amount.currency)
-
-
-def append_a_transaction_to_csv(filename):
-    return True

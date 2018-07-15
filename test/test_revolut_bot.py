@@ -107,3 +107,17 @@ def test_get_amount_with_margin_errors():
         revolut_bot.get_amount_with_margin(
                                 amount=Amount(real_amount=10, currency="USD"),
                                 percent_margin="1%")
+
+
+def test_convert_Transaction_to_dict():
+    transaction = Transaction(
+                    from_amount=Amount(real_amount=10, currency="USD"),
+                    to_amount=Amount(real_amount=8.66, currency="EUR"),
+                    date=datetime.strptime("10/07/18 16:30", "%d/%m/%y %H:%M"))
+    tr_dict = revolut_bot.convert_Transaction_to_dict(transaction)
+    assert tr_dict == {'date': '10/07/2018',
+                       'from_amount': 10.0,
+                       'from_currency': 'USD',
+                       'hour': '16:30:00',
+                       'to_amount': 8.66,
+                       'to_currency': 'EUR'}
