@@ -71,6 +71,10 @@ class Amount(object):
     def __str__(self):
         return('{} {}'.format(self.real_amount_str, self.currency))
 
+    def __repr__(self):
+        return("Amount(real_amount={}, currency='{}')".format(
+            self.real_amount, self.currency))
+
     def get_real_amount(self):
         """ Get the real amount from a Revolut amount
         >>> a = Amount(revolut_amount=100, currency="EUR")
