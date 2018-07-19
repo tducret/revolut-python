@@ -79,7 +79,7 @@ def get_last_transactions_from_csv(filename="exchange_history.csv",
 
 def dict_transaction_to_Transaction(tr_dict):
     """ Converts a transaction dictionnary to a Transaction object """
-    if list(tr_dict.keys()) != _CSV_COLUMNS:
+    if set(list(tr_dict.keys())) != set(_CSV_COLUMNS):
         raise TypeError("Columns expected : {}\n{} received".format(
                 _CSV_COLUMNS, list(tr_dict.keys())))
     str_date = "{} {}".format(tr_dict["date"],

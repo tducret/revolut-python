@@ -9,7 +9,7 @@ import base64
 from urllib.parse import urljoin
 from datetime import datetime
 
-__version__ = '0.0.4'  # Should be the same in setup.py
+__version__ = '0.0.5'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
