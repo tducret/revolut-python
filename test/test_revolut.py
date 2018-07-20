@@ -196,6 +196,13 @@ USD CURRENT,5.50,USD\n\
 BTC CURRENT,0.01000000,BTC\n\
 EUR SAVINGS (My vault),10.00,EUR"
 
+    account = accounts.get_account_by_name("BTC CURRENT")
+    print(account)
+    assert type(account) == Account
+
+    account = accounts.get_account_by_name("Not existing")
+    assert account is None
+
 
 def test_client_errors():
     with pytest.raises(ConnectionError):

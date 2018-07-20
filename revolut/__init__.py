@@ -9,7 +9,7 @@ import base64
 from urllib.parse import urljoin
 from datetime import datetime
 
-__version__ = '0.0.5'  # Should be the same in setup.py
+__version__ = '0.0.6'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
@@ -282,6 +282,15 @@ class Accounts(object):
                                        revolut_amount=account.get("balance")),
                                      state=account.get("state"),
                                      vault_name=account.get("vault_name")))
+
+    def get_account_by_name(self, account_name):
+        """ Get an account by its name """
+        found_account = None
+        for account in self:
+            if account.name == account_name:
+                found_account = account
+                break
+        return found_account
 
     def __len__(self):
         return len(self.list)

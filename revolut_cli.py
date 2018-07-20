@@ -23,11 +23,16 @@ _CLI_DEVICE_ID = 'revolut_cli'
     help='language ("fr" or "en"), for the csv header and separator',
     default='fr'
 )
+@click.option(
+    '--account', '-a',
+    type=str,
+    help='get a single account balance'
+ )
 @click.version_option(
     version=__version__,
     message='%(prog)s, based on [revolut] package version %(version)s'
 )
-def main(token, language):
+def main(token, language, account):
     """ Get the account balances on Revolut """
     if token is None:
         print("You don't seem to have a Revolut token")
@@ -41,8 +46,10 @@ def main(token, language):
 
     rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
     account_balances = rev.get_account_balances()
-
-    print(account_balances.csv(lang=language))
+    if account:
+        print(account_balances.get_account_by_name(account).balance)
+    else:
+        print(account_balances.csv(lang=language))
 
 
 def get_token():
