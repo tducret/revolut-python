@@ -31,6 +31,8 @@ Options:
   -t, --token TEXT     your Revolut token (or set the env var REVOLUT_TOKEN)
   -l, --language TEXT  language ("fr" or "en"), for the csv header and
                        separator
+  -a, --account TEXT   account name (ex : "EUR CURRENT") to get the balance
+                       for the account
   --version            Show the version and exit.
   --help               Show this message and exit.
  ```

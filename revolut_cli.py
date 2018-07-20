@@ -26,7 +26,7 @@ _CLI_DEVICE_ID = 'revolut_cli'
 @click.option(
     '--account', '-a',
     type=str,
-    help='get a single account balance'
+    help='account name (ex : "EUR CURRENT") to get the balance for the account'
  )
 @click.version_option(
     version=__version__,
