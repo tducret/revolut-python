@@ -1,4 +1,4 @@
-from revolut import Amount, Accounts, Transaction, Revolut, Client
+from revolut import Amount, Accounts, Account, Transaction, Revolut, Client
 from revolut import get_token_step1, get_token_step2
 import pytest
 import os
@@ -63,7 +63,7 @@ def test_get_account_balances():
     print('[{} accounts]'.format(len(accounts)))
 
     for account in accounts:
-        assert type(account) == Amount
+        assert type(account) == Account
         print('{}'.format(account))
 
 
@@ -147,26 +147,54 @@ def test_exchange_errors():
         revolut.exchange(from_amount=ten_thousands_euros, to_currency="EUR")
 
 
+def test_class_account():
+    account = Account(account_type="CURRENT",
+                      balance=Amount(real_amount=200.85, currency="EUR"),
+                      state="ACTIVE",
+                      vault_name="")
+    assert account.name == "EUR CURRENT"
+    assert str(account) == "EUR CURRENT : 200.85 EUR"
+
+    vault = Account(account_type="SAVINGS",
+                    balance=Amount(real_amount=150.35, currency="USD"),
+                    state="ACTIVE",
+                    vault_name="My vault")
+    assert vault.name == "USD SAVINGS (My vault)"
+    assert str(vault) == "USD SAVINGS (My vault) : 150.35 USD"
+
+
 def test_class_accounts():
-    account_balances = [{"balance": 10000, "currency": "EUR"},
-                        {"balance": 550, "currency": "USD"},
-                        {"balance": 1000000, "currency": "BTC"}]
-    accounts = Accounts(account_balances)
-    assert len(accounts.list) == 3
+    account_dicts = [{"balance": 10000, "currency": "EUR",
+                      "type": "CURRENT", "vault_name": "", "state": "ACTIVE"},
+                     {"balance": 550, "currency": "USD",
+                      "type": "CURRENT", "vault_name": "", "state": "ACTIVE"},
+                     {"balance": 0, "currency": "GBP", "vault_name": "",
+                      "type": "CURRENT", "state": "INACTIVE"},
+                     {"balance": 1000000, "currency": "BTC",
+                      "type": "CURRENT", "vault_name": "", "state": "ACTIVE"},
+                     {"balance": 1000, "currency": "EUR",
+                      "vault_name": "My vault",
+                      "type": "SAVINGS", "state": "ACTIVE"}]
+
+    accounts = Accounts(account_dicts)
+    assert len(accounts.list) == 5
+    assert type(accounts[0]) == Account
 
     csv_fr = accounts.csv()
     print(csv_fr)
     assert csv_fr == "Nom du compte;Solde;Devise\n\
-EUR wallet;100,00;EUR\n\
-USD wallet;5,50;USD\n\
-BTC wallet;0,01000000;BTC"
+EUR CURRENT;100,00;EUR\n\
+USD CURRENT;5,50;USD\n\
+BTC CURRENT;0,01000000;BTC\n\
+EUR SAVINGS (My vault);10,00;EUR"
 
     csv_en = accounts.csv(lang="en")
     print(csv_en)
     assert csv_en == "Account name,Balance,Currency\n\
-EUR wallet,100.00,EUR\n\
-USD wallet,5.50,USD\n\
-BTC wallet,0.01000000,BTC"
+EUR CURRENT,100.00,EUR\n\
+USD CURRENT,5.50,USD\n\
+BTC CURRENT,0.01000000,BTC\n\
+EUR SAVINGS (My vault),10.00,EUR"
 
 
 def test_client_errors():

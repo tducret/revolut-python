@@ -25,6 +25,9 @@ _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "QAR", "NOK", "SEK", "BTC", "ETH", "XRP", "BCH",
                          "LTC"]
 
+_VAULT_ACCOUNT_TYPE = "SAVINGS"
+_ACTIVE_ACCOUNT = "ACTIVE"
+
 # The amounts are stored as integer on Revolut.
 # They apply a scale factor depending on the currency
 _DEFAULT_SCALE_FACTOR = 100
@@ -162,6 +165,10 @@ class Revolut(object):
             account_balance = {}
             account_balance["balance"] = raw_account.get("balance")
             account_balance["currency"] = raw_account.get("currency")
+            account_balance["type"] = raw_account.get("type")
+            account_balance["state"] = raw_account.get("state")
+            # name is present when the account is a vault (type = SAVINGS)
+            account_balance["vault_name"] = raw_account.get("name", "")
             account_balances.append(account_balance)
         self.account_balances = Accounts(account_balances)
         return self.account_balances
@@ -237,14 +244,44 @@ class Revolut(object):
         return exchange_transaction
 
 
+class Account(object):
+    """ Class to handle an account """
+    def __init__(self, account_type, balance, state, vault_name):
+        self.account_type = account_type  # CURRENT, SAVINGS
+        self.balance = balance
+        self.state = state  # ACTIVE, INACTIVE
+        self.vault_name = vault_name
+        self.name = self.build_account_name()
+
+    def build_account_name(self):
+        if self.account_type == _VAULT_ACCOUNT_TYPE:
+            account_name = '{currency} {type} ({vault_name})'.format(
+                    currency=self.balance.currency,
+                    type=self.account_type,
+                    vault_name=self.vault_name)
+        else:
+            account_name = '{currency} {type}'.format(
+                    currency=self.balance.currency,
+                    type=self.account_type)
+        return account_name
+
+    def __str__(self):
+        return "{name} : {balance}".format(name=self.name,
+                                           balance=str(self.balance))
+
+
 class Accounts(object):
     """ Class to handle the account balances """
     def __init__(self, account_balances):
         self.raw_list = account_balances
         self.list = []
         for account in self.raw_list:
-            self.list.append(Amount(currency=account.get("currency"),
-                                    revolut_amount=account.get("balance")))
+            self.list.append(Account(account_type=account.get("type"),
+                                     balance=Amount(
+                                       currency=account.get("currency"),
+                                       revolut_amount=account.get("balance")),
+                                     state=account.get("state"),
+                                     vault_name=account.get("vault_name")))
 
     def __len__(self):
         return len(self.list)
@@ -261,9 +298,11 @@ class Accounts(object):
             csv_str = "Account name,Balance,Currency"
 
         for account in self.list:
-            csv_str += ('\n{currency} wallet,{balance},{currency}'.format(
-                    currency=account.currency,
-                    balance=account.real_amount_str))
+            if account.state == _ACTIVE_ACCOUNT:  # Do not print INACTIVE
+                csv_str += ('\n{account_name},{balance},{currency}'.format(
+                        account_name=account.name,
+                        currency=account.balance.currency,
+                        balance=account.balance.real_amount_str))
         if lang == "fr":
             # In the French Excel, csv are like "pi;3,14" (not "pi,3.14")
             csv_str = csv_str.replace(",", ";").replace(".", ",")
