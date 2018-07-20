@@ -39,11 +39,12 @@ Options:
 
  ```csv
 Account name,Balance,Currency
-EUR wallet,100.50,EUR
-GBP wallet,20.00,GBP
-USD wallet,0.00,USD
-AUD wallet,0.00,AUD
-BTC wallet,0.00123456,BTC
+EUR CURRENT,100.50,EUR
+GBP CURRENT,20.00,GBP
+USD CURRENT,0.00,USD
+AUD CURRENT,0.00,AUD
+BTC CURRENT,0.00123456,BTC
+EUR SAVINGS (My vault),10.30,EUR
 ```
 
 If you don't have a Revolut token yet, the tool will allow you to obtain one.
