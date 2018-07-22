@@ -53,13 +53,6 @@ If you don't have a Revolut token yet, the tool will allow you to obtain one.
 
 ## TODO
 
-- [x] Create a CLI tool to get the balance (like https://github.com/tducret/ingdirect-python)
-- [x] Explain how to use the CLI tool
-- [x] Create a tool to exchange automatically a currency when it grows
-- [x] Create the PIP package
-- [x] Create the Docker image
-- [x] Implement the function to get the last transactions
 - [ ] Document revolutbot.py
-- [x] Add revolutbot to the revolut Pypi package
 - [ ] Create a RaspberryPi Dockerfile for revolutbot (to check if rates grows very often)
 - [ ] Improve coverage for revolutbot
