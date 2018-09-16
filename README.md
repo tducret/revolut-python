@@ -8,6 +8,7 @@
 # Description
 
 Non-official client for the [Revolut Bank](https://www.revolut.com/)
+
 I wrote a French blog post about it [here](https://www.tducret.com/scraping/2018/08/17/un-robot-d-achat-et-de-vente-de-bitcoins-developpe-en-python.html)
 
 # Requirements
