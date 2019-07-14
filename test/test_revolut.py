@@ -11,8 +11,8 @@ _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "QAR", "NOK", "SEK", "BTC", "ETH", "XRP", "BCH",
                          "LTC"]
 
-_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
-_TOKEN = os.environ.get('REVOLUT_TOKEN', None)
+_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID')
+_TOKEN = os.environ.get('REVOLUT_TOKEN')
 
 _SIMU_EXCHANGE = True  # True = Do not execute a real currency exchange
 _SIMU_GET_TOKEN = True  # True = Do not try to get a real token
@@ -21,8 +21,8 @@ if _SIMU_GET_TOKEN is True:
     _PHONE = "+33612345678"
     _PASSWORD = "1234"
 else:
-    _PHONE = os.environ.get('REVOLUT_PHONE', None)
-    _PASSWORD = os.environ.get('REVOLUT_TOKEN', None)
+    _PHONE = os.environ.get('REVOLUT_PHONE')
+    _PASSWORD = os.environ.get('REVOLUT_TOKEN')
 
 revolut = Revolut(token=_TOKEN, device_id=_DEVICE_ID)
 
@@ -180,7 +180,7 @@ def test_class_accounts():
     assert len(accounts.list) == 5
     assert type(accounts[0]) == Account
 
-    csv_fr = accounts.csv()
+    csv_fr = accounts.csv(lang="fr")
     print(csv_fr)
     assert csv_fr == "Nom du compte;Solde;Devise\n\
 EUR CURRENT;100,00;EUR\n\
