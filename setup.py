@@ -7,7 +7,7 @@ except ImportError:  # For pip <= 9
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
-__version__ = '0.0.6'  # Should match with __init.py__
+__version__ = '0.0.7'  # Should match with __init.py__
 _NAME = 'revolut'
 _PACKAGE_LIST = ['revolut', 'revolut_bot']
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
@@ -48,18 +48,7 @@ setup(
 # ------------------------------------------
 # Make sure everything was pushed (with a git status)
 # (or git commit --am "Comment" and git push)
-# git tag 0.0.6 -m "Improved account balances"
-# git push --tags
-
-# Do a generation test on the pypi test repository
-# python3 setup.py sdist register -r pypitest
-
-# Upload test of the package on the pypi test repository
-# python3 setup.py sdist upload -r pypitest
-
-# Upload of the package on the official pypi repository
-# python3 setup.py sdist upload -r pypi
+# export VERSION=0.0.7; git tag $VERSION -m "Code quality improvements (thanks @haakonvt)"; git push --tags
 
 # If you need to delete a tag
-# git push --delete origin VERSION
-# git tag -d VERSION
+# git push --delete origin $VERSION; git tag -d $VERSION
