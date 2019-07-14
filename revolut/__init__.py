@@ -3,13 +3,13 @@
 This package allows you to communicate with your Revolut accounts
 """
 
-import requests
-import json
 import base64
-from urllib.parse import urljoin
 from datetime import datetime
+import json
+import requests
+from urllib.parse import urljoin
 
-__version__ = '0.0.6'  # Should be the same in setup.py
+__version__ = '0.0.7'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_QUOTE = "https://api.revolut.com/quote/"
@@ -41,7 +41,7 @@ _SCALE_FACTOR_CURRENCY_DICT = {
                                }
 
 
-class Amount(object):
+class Amount:
     """ Class to handle the Revolut amount with currencies """
     def __init__(self, currency, revolut_amount=None, real_amount=None):
         if currency not in _AVAILABLE_CURRENCIES:
@@ -53,6 +53,7 @@ class Amount(object):
                 raise TypeError(type(revolut_amount))
             self.revolut_amount = revolut_amount
             self.real_amount = self.get_real_amount()
+
         elif real_amount is not None:
             if type(real_amount) not in [float, int]:
                 raise TypeError(type(real_amount))
@@ -100,7 +101,7 @@ class Amount(object):
         return int(self.real_amount*scale)
 
 
-class Transaction(object):
+class Transaction:
     """ Class to handle an exchange transaction """
     def __init__(self, from_amount, to_amount, date):
         if type(from_amount) != Amount:
@@ -119,7 +120,7 @@ class Transaction(object):
                                       self.to_amount))
 
 
-class Client(object):
+class Client:
     """ Do the requests with the Revolut servers """
     def __init__(self, token, device_id):
         self.session = requests.session()
@@ -133,7 +134,7 @@ class Client(object):
 
     def _get(self, url, expected_status_code=200):
         ret = self.session.get(url=url, headers=self.headers)
-        if (ret.status_code != expected_status_code):
+        if ret.status_code != expected_status_code:
             raise ConnectionError(
                 'Status code {status} for url {url}\n{content}'.format(
                     status=ret.status_code, url=url, content=ret.text))
@@ -142,15 +143,15 @@ class Client(object):
     def _post(self, url, post_data, expected_status_code=200):
         ret = self.session.post(url=url,
                                 headers=self.headers,
-                                data=post_data)
-        if (ret.status_code != expected_status_code):
+                                json=post_data)
+        if ret.status_code != expected_status_code:
             raise ConnectionError(
                 'Status code {status} for url {url}\n{content}'.format(
                     status=ret.status_code, url=url, content=ret.text))
         return ret
 
 
-class Revolut(object):
+class Revolut:
     def __init__(self, token, device_id):
         self.client = Client(token=token, device_id=device_id)
 
@@ -162,14 +163,14 @@ class Revolut(object):
 
         account_balances = []
         for raw_account in raw_accounts.get("pockets"):
-            account_balance = {}
-            account_balance["balance"] = raw_account.get("balance")
-            account_balance["currency"] = raw_account.get("currency")
-            account_balance["type"] = raw_account.get("type")
-            account_balance["state"] = raw_account.get("state")
-            # name is present when the account is a vault (type = SAVINGS)
-            account_balance["vault_name"] = raw_account.get("name", "")
-            account_balances.append(account_balance)
+            account_balances.append({
+                "balance": raw_account.get("balance"),
+                "currency": raw_account.get("currency"),
+                "type": raw_account.get("type"),
+                "state": raw_account.get("state"),
+                # name is present when the account is a vault (type = SAVINGS)
+                "vault_name": raw_account.get("name", ""),
+            })
         self.account_balances = Accounts(account_balances)
         return self.account_balances
 
@@ -178,7 +179,7 @@ class Revolut(object):
             raise TypeError("from_amount must be with the Amount type")
 
         if to_currency not in _AVAILABLE_CURRENCIES:
-                raise KeyError(to_currency)
+            raise KeyError(to_currency)
 
         url_quote = urljoin(_URL_QUOTE, '{}{}?amount={}&side=SELL'.format(
             from_amount.currency,
@@ -195,12 +196,14 @@ class Revolut(object):
             raise TypeError("from_amount must be with the Amount type")
 
         if to_currency not in _AVAILABLE_CURRENCIES:
-                raise KeyError(to_currency)
+            raise KeyError(to_currency)
 
-        data = '{"fromCcy":"%s","fromAmount":%d,"toCcy":"%s","toAmount":null}'\
-            % (from_amount.currency,
-               from_amount.revolut_amount,
-               to_currency)
+        data = {
+            "fromCcy": from_amount.currency,
+            "fromAmount": from_amount.revolut_amount,
+            "toCcy": to_currency,
+            "toAmount": None,
+        }
 
         if simulate:
             # Because we don't want to exchange currencies
@@ -244,7 +247,7 @@ class Revolut(object):
         return exchange_transaction
 
 
-class Account(object):
+class Account:
     """ Class to handle an account """
     def __init__(self, account_type, balance, state, vault_name):
         self.account_type = account_type  # CURRENT, SAVINGS
@@ -270,65 +273,69 @@ class Account(object):
                                            balance=str(self.balance))
 
 
-class Accounts(object):
+class Accounts:
     """ Class to handle the account balances """
+
     def __init__(self, account_balances):
         self.raw_list = account_balances
-        self.list = []
-        for account in self.raw_list:
-            self.list.append(Account(account_type=account.get("type"),
-                                     balance=Amount(
-                                       currency=account.get("currency"),
-                                       revolut_amount=account.get("balance")),
-                                     state=account.get("state"),
-                                     vault_name=account.get("vault_name")))
+        self.list = [
+            Account(
+                account_type=account.get("type"),
+                balance=Amount(
+                    currency=account.get("currency"),
+                    revolut_amount=account.get("balance"),
+                ),
+                state=account.get("state"),
+                vault_name=account.get("vault_name"),
+            )
+            for account in self.raw_list
+        ]
 
     def get_account_by_name(self, account_name):
         """ Get an account by its name """
-        found_account = None
-        for account in self:
+        for account in self.list:
             if account.name == account_name:
-                found_account = account
-                break
-        return found_account
+                return account
 
     def __len__(self):
         return len(self.list)
 
     def __getitem__(self, key):
-        """ Méthod to access the object as a list
+        """ Method to access the object as a list
         (ex : accounts[1]) """
         return self.list[key]
 
     def csv(self, lang="fr"):
-        if lang == "fr":
+        lang_is_fr = lang == "fr"
+        if lang_is_fr:
             csv_str = "Nom du compte;Solde;Devise"
         else:
             csv_str = "Account name,Balance,Currency"
 
+        # Europe uses 'comma' as decimal separator,
+        # so it can't be used as delimiter:
+        delimiter = ";" if lang_is_fr else ","
+
         for account in self.list:
             if account.state == _ACTIVE_ACCOUNT:  # Do not print INACTIVE
-                csv_str += ('\n{account_name},{balance},{currency}'.format(
-                        account_name=account.name,
-                        currency=account.balance.currency,
-                        balance=account.balance.real_amount_str))
-        if lang == "fr":
-            # In the French Excel, csv are like "pi;3,14" (not "pi,3.14")
-            csv_str = csv_str.replace(",", ";").replace(".", ",")
-        return csv_str
+                csv_str += "\n" + delimiter.join((
+                    account.name,
+                    account.balance.real_amount_str,
+                    account.balance.currency,
+                ))
+
+        return csv_str.replace(".", ",") if lang_is_fr else csv_str
 
 
 def get_token_step1(device_id, phone, password, simulate=False):
     """ Function to obtain a Revolut token (step 1 : send a code by sms) """
-    if simulate:
-        ret = ""
-    else:
+    if not simulate:
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
-        data = '{"phone":"%s","password": "%s"}' % (phone, password)
-        ret = c._post(url=_URL_GET_TOKEN_STEP1,
-                      post_data=data,
-                      expected_status_code=204)
-    return ret
+        data = {"phone": phone, "password": password}
+        return c._post(url=_URL_GET_TOKEN_STEP1,
+                       json=data,
+                       expected_status_code=204)
+    return ""
 
 
 def get_token_step2(device_id, phone, sms_code, simulate=False):
@@ -353,7 +360,7 @@ def get_token_step2(device_id, phone, sms_code, simulate=False):
     else:
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
         sms_code = sms_code.replace("-", "")  # If the user would put -
-        data = '{"phone":"%s","code": "%s"}' % (phone, sms_code)
+        data = {"phone": phone, "code": sms_code}
         ret = c._post(url=_URL_GET_TOKEN_STEP2, post_data=data)
         raw_get_token = json.loads(ret.text)
 

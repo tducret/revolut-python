@@ -105,3 +105,6 @@ venv.bak/
 
 # Specific for this project
 exchange_history.csv
+
+# VSCode
+.vscode/

@@ -100,7 +100,7 @@ def to_buy_or_not_to_buy(revolut, simulate, filename, forceexchange):
     buy_condition = current_balance_in_other_currency.real_amount > \
         last_sell_plus_margin.real_amount
 
-    if (buy_condition or forceexchange):
+    if buy_condition or forceexchange:
         if buy_condition:
             log("{} > {}".format(
                 current_balance_in_other_currency,

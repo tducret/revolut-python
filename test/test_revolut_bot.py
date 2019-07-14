@@ -6,8 +6,8 @@ import os
 
 # To be tested with : python -m pytest -vs test/test_revolut_bot.py
 
-_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID', None)
-_TOKEN = os.environ.get('REVOLUT_TOKEN', None)
+_DEVICE_ID = os.environ.get('REVOLUT_DEVICE_ID')
+_TOKEN = os.environ.get('REVOLUT_TOKEN')
 
 
 def test_class_Transaction():
