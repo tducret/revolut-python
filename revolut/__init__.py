@@ -333,7 +333,7 @@ def get_token_step1(device_id, phone, password, simulate=False):
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
         data = {"phone": phone, "password": password}
         return c._post(url=_URL_GET_TOKEN_STEP1,
-                       json=data,
+                       post_data=data,
                        expected_status_code=204)
     return ""
 
