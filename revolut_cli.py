@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import click
+from getpass import getpass
 import sys
 
 from revolut import Revolut, __version__, get_token_step1, get_token_step2
@@ -57,7 +58,7 @@ def get_token():
     phone = input(
         "What is your mobile phone (used with your Revolut "
         "account) [ex : +33612345678] ? ")
-    password = input(
+    password = getpass(
         "What is your Revolut app password [ex: 1234] ? ")
     get_token_step1(
         device_id=_CLI_DEVICE_ID,
