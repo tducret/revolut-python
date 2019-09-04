@@ -127,6 +127,7 @@ class Client:
         self.headers = {
                     'Host': 'api.revolut.com',
                     'X-Api-Version': '1',
+                    'X-Client-Version': '6.6.2',
                     'X-Device-Id': device_id,
                     'User-Agent': 'Revolut/5.5 500500250 (CLI; Android 4.4.2)',
                     'Authorization': 'Basic '+token,
@@ -334,7 +335,7 @@ def get_token_step1(device_id, phone, password, simulate=False):
         data = {"phone": phone, "password": password}
         return c._post(url=_URL_GET_TOKEN_STEP1,
                        post_data=data,
-                       expected_status_code=204)
+                       expected_status_code=200)
     return ""
 
 
