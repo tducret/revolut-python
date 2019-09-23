@@ -53,6 +53,8 @@ EUR SAVINGS (My vault),10.30,EUR
 
 If you don't have a Revolut token yet, the tool will allow you to obtain one.
 
+⚠️ **If you don't receive a SMS when trying to get a token, you need to logout from the app on your Smartphone.**
+
 ## TODO
 
 - [ ] Document revolutbot.py
