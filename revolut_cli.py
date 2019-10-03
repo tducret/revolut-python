@@ -36,15 +36,22 @@ _CLI_DEVICE_ID = 'revolut_cli'
 )
 def main(token, language, account):
     """ Get the account balances on Revolut """
+    
     if token is None:
         print("You don't seem to have a Revolut token")
-        answer = input("Would you like to generate a token [yes/no] ? ")
-        if answer.lower() in ["y", "yes"]:
-            get_token()
-            sys.exit()
-        else:
-            print("OK. Goodbye")
-            sys.exit()
+        answer = input("Would you like to generate a token [yes/no]? ")
+        selection(answer)
+        while True:
+            try:
+                token = get_token()
+            except Exception as e:
+                login_error_handler(e)
+    else:
+        print(token)
+        sys.exit()
+
+            
+
 
     rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
     account_balances = rev.get_account_balances()
@@ -63,7 +70,7 @@ def get_token():
     get_token_step1(
         device_id=_CLI_DEVICE_ID,
         phone=phone,
-        password=password,
+        password=password
     )
 
     sms_code = input(
@@ -85,7 +92,34 @@ def get_token():
     print("or")
     print('echo "export REVOLUT_TOKEN={}" >> ~/.bash_profile'
           .format(token))
+    return(token)
 
+def selection(user_input):
+    yes_list = ["yes", "ye", "ya", "y", "yeah"]
+    no_list = ["no", "nah", "nope", "n"]
+
+    if user_input in yes_list:
+        return
+    elif user_input in no_list:
+        print("Thanks for using the Revolut desktop app!")
+        sys.exit()
+    else:
+        print("Input not recognized.")
+        sys.exit()
+
+def login_error_handler(error):
+    error_list = {
+        "The string supplied did not seem to be a phone number" : "Please check the supplied number and try again.",
+        "Status code 401" : "Incorrect login details, please try again.",
+        "phone is empty" : "You did not enter a phone number..."
+    }
+    error = str(error)
+    for entry in error_list:
+        if entry in error:
+            print(error_list.get(entry))
+            return
+    print("An unknown error has occurred: {}".format(error))
+    return
 
 if __name__ == "__main__":
     main()
