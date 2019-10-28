@@ -55,6 +55,34 @@ If you don't have a Revolut token yet, the tool will allow you to obtain one.
 
 ⚠️ **If you don't receive a SMS when trying to get a token, you need to logout from the app on your Smartphone.**
 
+## Pulling transactions
+
+```bash
+Usage: revolut_transactions.py [OPTIONS]
+
+  Get the account balances on Revolut
+
+Options:
+  -t, --token TEXT            your Revolut token (or set the env var
+                              REVOLUT_TOKEN)
+  -l, --language TEXT         language ("fr" or "en"), for the csv header and
+                              separator
+  -t, --from_date [%Y-%m-%d]  transactions lookback date in YYYY-MM-DD format
+                              (ex: "2019-10-26"). Default 30 days back
+  --help                      Show this message and exit.
+```
+
+ Example output :
+
+ ```csv
+Date-time,Description,Amount,Currency
+08/26/2019 21:31:00,Card Delivery Fee,-59.99,SEK
+09/14/2019 12:50:07,donkey.bike **pending**,0.0,SEK
+09/14/2019 13:03:15,Top-Up by *6458,200.0,SEK
+09/30/2019 16:19:19,Reward user for the invite,200.0,SEK
+10/12/2019 23:51:02,Tiptapp Reservation,-250.0,SEK
+```
+
 ## TODO
 
 - [ ] Document revolutbot.py
