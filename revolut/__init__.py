@@ -12,6 +12,7 @@ from urllib.parse import urljoin
 __version__ = '0.0.9'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
+_URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
 _URL_QUOTE = "https://api.revolut.com/quote/"
 _URL_EXCHANGE = "https://api.revolut.com/exchange"
 _URL_GET_TOKEN_STEP1 = "https://api.revolut.com/signin"
@@ -27,6 +28,12 @@ _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
 
 _VAULT_ACCOUNT_TYPE = "SAVINGS"
 _ACTIVE_ACCOUNT = "ACTIVE"
+_TRANSACTION_COMPLETED = "COMPLETED"
+_TRANSACTION_FAILED = "FAILED"
+_TRANSACTION_PENDING = "PENDING"
+_TRANSACTION_REVERTED = "REVERTED"
+_TRANSACTION_DECLINED = "DECLINED"
+
 
 # The amounts are stored as integer on Revolut.
 # They apply a scale factor depending on the currency
@@ -174,6 +181,25 @@ class Revolut:
             })
         self.account_balances = Accounts(account_balances)
         return self.account_balances
+
+    def get_account_transactions(self, from_date):
+        """ Get the account transactions and return as json """
+        wallet_id = self.get_wallet_id()
+        from_date_ts = from_date.timestamp()
+        path = _URL_GET_TRANSACTIONS + '?from={from_date_ts}&walletId={wallet_id}'.format(
+            from_date_ts=int(from_date_ts),
+            wallet_id=self.get_wallet_id()
+        )
+        ret = self.client._get(path)
+        raw_transactions = json.loads(ret.text)
+        transactions = AccountTransactions(raw_transactions)
+        return transactions
+
+    def get_wallet_id(self):
+        """ Get the main wallet_id """
+        ret = self.client._get(_URL_GET_ACCOUNTS)
+        raw = json.loads(ret.text)
+        return raw.get('id')
 
     def quote(self, from_amount, to_currency):
         if type(from_amount) != Amount:
@@ -325,6 +351,112 @@ class Accounts:
                     account.balance.currency,
                 ))
 
+        return csv_str.replace(".", ",") if lang_is_fr else csv_str
+
+
+class AccountTransaction:
+    """ Class to handle an account transaction """
+    def __init__(
+            self,
+            transactions_type,
+            state,
+            started_date,
+            completed_date,
+            amount,
+            fee,
+            description,
+            account_id
+        ):
+        self.transactions_type = transactions_type
+        self.state = state
+        self.started_date = started_date
+        self.completed_date = completed_date
+        self.amount = amount
+        self.fee = fee
+        self.description = description
+        self.account_id = account_id
+
+    def __str__(self):
+        return "{description}: {amount}".format(
+            description=self.description,
+            amount=str(self.amount)
+        )
+
+    def get_datetime__str(self, date_format="%d/%m/%Y %H:%M:%S"):
+        """ 'Pending' transactions do not have 'completed_date' yet
+        so return 'started_date' instead """
+        timestamp = self.completed_date if self.completed_date \
+                else self.started_date
+        # Convert from timestamp to datetime
+        dt = datetime.fromtimestamp(
+            timestamp / 1000
+        )
+        dt_str = dt.strftime(date_format)
+        return dt_str
+
+    def get_description(self):
+        # Adding 'pending' for processing transactions
+        description = self.description
+        if self.state == _TRANSACTION_PENDING:
+            description = '{} **pending**'.format(description)
+        return description
+
+    def get_amount__str(self):
+        """ Convert amount to float and return string representation """
+        return str(self.amount.real_amount)
+
+
+class AccountTransactions:
+    """ Class to handle the account transactions """
+
+    def __init__(self, account_transactions):
+        self.raw_list = account_transactions
+        self.list = [
+            AccountTransaction(
+                transactions_type=transaction.get("type"),
+                state=transaction.get("state"),
+                started_date=transaction.get("startedDate"),
+                completed_date=transaction.get("completedDate"),
+                amount=Amount(revolut_amount=transaction.get('amount'),
+                              currency=transaction.get('currency')),
+                fee=transaction.get('fee'),
+                description=transaction.get('description'),
+                account_id=transaction.get('account').get('id')
+            )
+            for transaction in self.raw_list
+        ]
+
+    def __len__(self):
+        return len(self.list)
+
+    def csv(self, lang="fr", reverse=False):
+        lang_is_fr = lang == "fr"
+        if lang_is_fr:
+            csv_str = "Date-heure (DD/MM/YYYY HH:MM:ss);Description;Montant;Devise"
+            date_format = "%d/%m/%Y %H:%M:%S"
+        else:
+            csv_str = "Date-time (MM/DD/YYYY HH:MM:ss),Description,Amount,Currency"
+            date_format = "%m/%d/%Y %H:%M:%S"
+
+        # Europe uses 'comma' as decimal separator,
+        # so it can't be used as delimiter:
+        delimiter = ";" if lang_is_fr else ","
+
+        # Do not export declined or failed payments
+        transaction_list = list(reversed(self.list)) if reverse else self.list
+        for account_transaction in transaction_list:
+            if account_transaction.state not in [
+                    _TRANSACTION_DECLINED,
+                    _TRANSACTION_FAILED,
+                    _TRANSACTION_REVERTED
+                ]:
+
+                csv_str += "\n" + delimiter.join((
+                    account_transaction.get_datetime__str(date_format),
+                    account_transaction.get_description(),
+                    account_transaction.get_amount__str(),
+                    account_transaction.amount.currency
+                ))
         return csv_str.replace(".", ",") if lang_is_fr else csv_str
 
 
