@@ -362,7 +362,6 @@ class AccountTransaction:
             state,
             started_date,
             completed_date,
-            currency,
             amount,
             fee,
             description,
@@ -372,20 +371,18 @@ class AccountTransaction:
         self.state = state
         self.started_date = started_date
         self.completed_date = completed_date
-        self.currency = currency
         self.amount = amount
         self.fee = fee
         self.description = description
         self.account_id = account_id
 
     def __str__(self):
-        return "{description}: {amount}{currency}".format(
+        return "{description}: {amount}".format(
             description=self.description,
-            amount=str(self.amount),
-            currency=self.currency
+            amount=str(self.amount)
         )
 
-    def get_datetime__str(self):
+    def get_datetime__str(self, date_format="%d/%m/%Y %H:%M:%S"):
         """ 'Pending' transactions do not have 'completed_date' yet
         so return 'started_date' instead """
         timestamp = self.completed_date if self.completed_date \
@@ -394,7 +391,7 @@ class AccountTransaction:
         dt = datetime.fromtimestamp(
             timestamp / 1000
         )
-        dt_str = dt.strftime("%m/%d/%Y %H:%M:%S")
+        dt_str = dt.strftime(date_format)
         return dt_str
 
     def get_description(self):
@@ -406,7 +403,7 @@ class AccountTransaction:
 
     def get_amount__str(self):
         """ Convert amount to float and return string representation """
-        return str(self.amount / 100)
+        return str(self.amount.real_amount)
 
 
 class AccountTransactions:
@@ -420,8 +417,8 @@ class AccountTransactions:
                 state=transaction.get("state"),
                 started_date=transaction.get("startedDate"),
                 completed_date=transaction.get("completedDate"),
-                currency=transaction.get('currency'),
-                amount=transaction.get('amount'),
+                amount=Amount(revolut_amount=transaction.get('amount'),
+                              currency=transaction.get('currency')),
                 fee=transaction.get('fee'),
                 description=transaction.get('description'),
                 account_id=transaction.get('account').get('id')
@@ -432,19 +429,22 @@ class AccountTransactions:
     def __len__(self):
         return len(self.list)
 
-    def csv(self, lang="fr"):
+    def csv(self, lang="fr", reverse=False):
         lang_is_fr = lang == "fr"
         if lang_is_fr:
-            csv_str = "Date-heure,Description,Montant,Devise"
+            csv_str = "Date-heure (DD/MM/YYYY HH:MM:ss);Description;Montant;Devise"
+            date_format = "%d/%m/%Y %H:%M:%S"
         else:
-            csv_str = "Date-time,Description,Amount,Currency"
+            csv_str = "Date-time (MM/DD/YYYY HH:MM:ss),Description,Amount,Currency"
+            date_format = "%m/%d/%Y %H:%M:%S"
 
         # Europe uses 'comma' as decimal separator,
         # so it can't be used as delimiter:
         delimiter = ";" if lang_is_fr else ","
 
         # Do not export declined or failed payments
-        for account_transaction in self.list:
+        transaction_list = list(reversed(self.list)) if reverse else self.list
+        for account_transaction in transaction_list:
             if account_transaction.state not in [
                     _TRANSACTION_DECLINED,
                     _TRANSACTION_FAILED,
@@ -452,10 +452,10 @@ class AccountTransactions:
                 ]:
 
                 csv_str += "\n" + delimiter.join((
-                    account_transaction.get_datetime__str(),
+                    account_transaction.get_datetime__str(date_format),
                     account_transaction.get_description(),
                     account_transaction.get_amount__str(),
-                    account_transaction.currency
+                    account_transaction.amount.currency
                 ))
         return csv_str.replace(".", ",") if lang_is_fr else csv_str
 
