@@ -69,6 +69,7 @@ Options:
                               separator
   -t, --from_date [%Y-%m-%d]  transactions lookback date in YYYY-MM-DD format
                               (ex: "2019-10-26"). Default 30 days back
+  -r, --reverse               reverse the order of the transactions displayed
   --help                      Show this message and exit.
 ```
 

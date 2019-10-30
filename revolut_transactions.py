@@ -34,8 +34,13 @@ _URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
     type=click.DateTime(formats=["%Y-%m-%d"]),
     help='transactions lookback date in YYYY-MM-DD format (ex: "2019-10-26"). Default 30 days back',
     default=(datetime.now()-timedelta(days=30)).strftime("%Y-%m-%d")
- )
-def main(token, language, from_date):
+)
+@click.option(
+    '--reverse', '-r',
+    is_flag=True,
+    help='reverse the order of the transactions displayed',
+)
+def main(token, language, from_date, reverse):
     """ Get the account balances on Revolut """
     if token is None:
         print("You don't seem to have a Revolut token. Use 'revolut_cli' to obtain one")
@@ -43,7 +48,7 @@ def main(token, language, from_date):
 
     rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
     account_transactions = rev.get_account_transactions(from_date)
-    print(account_transactions.csv(lang=language))
+    print(account_transactions.csv(lang=language, reverse=reverse))
 
 if __name__ == "__main__":
     main()
