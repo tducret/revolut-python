@@ -41,17 +41,11 @@ def main(token, language, account):
         print("You don't seem to have a Revolut token")
         answer = input("Would you like to generate a token [yes/no]? ")
         selection(answer)
-        while True:
+        while token is None:
             try:
                 token = get_token()
             except Exception as e:
                 login_error_handler(e)
-    else:
-        print(token)
-        sys.exit()
-
-            
-
 
     rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
     account_balances = rev.get_account_balances()
@@ -92,24 +86,26 @@ def get_token():
     print("or")
     print('echo "export REVOLUT_TOKEN={}" >> ~/.bash_profile'
           .format(token))
-    return(token)
+    return token
 
 def selection(user_input):
     yes_list = ["yes", "ye", "ya", "y", "yeah"]
     no_list = ["no", "nah", "nope", "n"]
 
+    user_input = user_input.lower()
     if user_input in yes_list:
         return
     elif user_input in no_list:
         print("Thanks for using the Revolut desktop app!")
         sys.exit()
     else:
-        print("Input not recognized.")
+        print("Input not recognized, expecting 'yes' or 'no")
         sys.exit()
 
 def login_error_handler(error):
     error_list = {
-        "The string supplied did not seem to be a phone number" : "Please check the supplied number and try again.",
+        "The string supplied did not seem to be a phone number" : \
+            "Please check the supplied number and try again.",
         "Status code 401" : "Incorrect login details, please try again.",
         "phone is empty" : "You did not enter a phone number..."
     }
