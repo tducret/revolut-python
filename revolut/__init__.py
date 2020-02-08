@@ -9,7 +9,7 @@ import json
 import requests
 from urllib.parse import urljoin
 
-__version__ = '0.1.1'  # Should be the same in setup.py
+__version__ = '0.1.2'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
@@ -185,10 +185,9 @@ class Revolut:
 
     def get_account_transactions(self, from_date):
         """ Get the account transactions and return as json """
-        wallet_id = self.get_wallet_id()
         from_date_ts = from_date.timestamp()
         path = _URL_GET_TRANSACTIONS + '?from={from_date_ts}&walletId={wallet_id}'.format(
-            from_date_ts=int(from_date_ts),
+            from_date_ts=int(from_date_ts) * 1000,
             wallet_id=self.get_wallet_id()
         )
         ret = self.client._get(path)

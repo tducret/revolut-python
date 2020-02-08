@@ -7,14 +7,14 @@ except ImportError:  # For pip <= 9
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
-__version__ = '0.1.1'  # Should match with __init.py__
+__version__ = '0.1.2'  # Should match with __init.py__
 _NAME = 'revolut'
 _PACKAGE_LIST = ['revolut', 'revolut_bot']
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
 _DESCRIPTION = 'Package to get account balances and do operations on Revolut'
 _MOTS_CLES = ['api', 'revolut', 'bank', 'parsing', 'cli',
               'python-wrapper', 'scraping', 'scraper', 'parser']
-_SCRIPTS = ['revolut_cli.py', 'revolutbot.py']
+_SCRIPTS = ['revolut_cli.py', 'revolutbot.py', 'revolut_transactions.py']
 # To delete here + 'scripts' dans setup()
 # if no command is used in the package
 
@@ -48,7 +48,7 @@ setup(
 # ------------------------------------------
 # Make sure everything was pushed (with a git status)
 # (or git commit --am "Comment" and git push)
-# export VERSION=0.1.1; git tag $VERSION -m "Add new currencies"; git push --tags
+# export VERSION=0.1.2; git tag $VERSION -m "Fix timestamp in transactions (in ms instead of seconds). Thanks @Ludo444"; git push --tags
 
 # If you need to delete a tag
 # git push --delete origin $VERSION; git tag -d $VERSION
