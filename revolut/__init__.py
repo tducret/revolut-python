@@ -135,7 +135,7 @@ class Client:
         self.headers = {
                     'Host': 'api.revolut.com',
                     'X-Api-Version': '1',
-                    'X-Client-Version': '6.36.2',
+                    'X-Client-Version': '6.6.2',
                     'X-Device-Id': device_id,
                     'User-Agent': 'Revolut/5.5 500500250 (CLI; Android 4.4.2)',
                     'Authorization': 'Basic '+token,
