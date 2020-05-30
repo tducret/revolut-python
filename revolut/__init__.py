@@ -9,7 +9,7 @@ import json
 import requests
 from urllib.parse import urljoin
 
-__version__ = '0.1.2'  # Should be the same in setup.py
+__version__ = '0.1.4.dev0'  # Should be the same in setup.py
 
 _URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
 _URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'

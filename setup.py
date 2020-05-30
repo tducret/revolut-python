@@ -7,7 +7,7 @@ except ImportError:  # For pip <= 9
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
-__version__ = '0.1.2'  # Should match with __init.py__
+__version__ = '0.1.4.dev0'  # Should match with __init.py__
 _NAME = 'revolut'
 _PACKAGE_LIST = ['revolut', 'revolut_bot']
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
@@ -48,7 +48,7 @@ setup(
 # ------------------------------------------
 # Make sure everything was pushed (with a git status)
 # (or git commit --am "Comment" and git push)
-# export VERSION=0.1.2; git tag $VERSION -m "Fix timestamp in transactions (in ms instead of seconds). Thanks @Ludo444"; git push --tags
+# export VERSION=0.1.4.dev0; git tag $VERSION -m "Update X-Client-Version + raise error when requiring Third factor authentication + print extra tips to the CLI user when creating the token"; git push --tags
 
 # If you need to delete a tag
 # git push --delete origin $VERSION; git tag -d $VERSION
