@@ -497,6 +497,12 @@ def get_token_step2(device_id, phone, sms_code, simulate=False):
         ret = c._post(url=_URL_GET_TOKEN_STEP2, post_data=data)
         raw_get_token = json.loads(ret.text)
 
+        if raw_get_token.get("thirdFactorAuthAccessToken"):
+            raise KeyError(
+                "Token generation with a third factor authentication (selfie) "
+                "is not currently supported by this package"
+            )
+
     user_id = raw_get_token["user"]["id"]
     access_token = raw_get_token["accessToken"]
     token_to_encode = '{}:{}'.format(user_id, access_token).encode('ascii')
