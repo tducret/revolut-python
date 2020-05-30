@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+from pathlib import Path
 from setuptools import setup
-try:  # Pour pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError:  # For pip <= 9
-    from pip.req import parse_requirements
+
+HERE = Path(__file__).parent
+reqs_path = HERE / 'requirements.txt'
+with open(reqs_path) as reqs_file:
+    requirements = reqs_file.read().splitlines()
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
@@ -17,9 +19,6 @@ _MOTS_CLES = ['api', 'revolut', 'bank', 'parsing', 'cli',
 _SCRIPTS = ['revolut_cli.py', 'revolutbot.py', 'revolut_transactions.py']
 # To delete here + 'scripts' dans setup()
 # if no command is used in the package
-
-install_reqs = parse_requirements('requirements.txt', session='hack')
-requirements = [str(ir.req) for ir in install_reqs]
 
 setup(
     name=_NAME,
