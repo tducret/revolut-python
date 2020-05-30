@@ -461,18 +461,21 @@ class AccountTransactions:
 
 
 def get_token_step1(device_id, phone, password, simulate=False):
-    """ Function to obtain a Revolut token (step 1 : send a code by sms) """
+    """ Function to obtain a Revolut token (step 1 : send a code by sms/email) """
     if not simulate:
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
         data = {"phone": phone, "password": password}
-        return c._post(url=_URL_GET_TOKEN_STEP1,
+        ret = c._post(url=_URL_GET_TOKEN_STEP1,
                        post_data=data,
                        expected_status_code=200)
-    return ""
+        channel = ret.json().get('channel')
+    else:
+        channel = "SMS"
+    return channel
 
 
-def get_token_step2(device_id, phone, sms_code, simulate=False):
-    """ Function to obtain a Revolut token (step 2 : with sms code) """
+def get_token_step2(device_id, phone, code, simulate=False):
+    """ Function to obtain a Revolut token (step 2 : with code) """
     if simulate:
         # Because we don't want to receive a code through sms
         # for every test ;)
@@ -492,10 +495,10 @@ def get_token_step2(device_id, phone, sms_code, simulate=False):
         raw_get_token = json.loads(simu)
     else:
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
-        sms_code = sms_code.replace("-", "")  # If the user would put -
-        data = {"phone": phone, "code": sms_code}
+        code = code.replace("-", "")  # If the user would put -
+        data = {"phone": phone, "code": code}
         ret = c._post(url=_URL_GET_TOKEN_STEP2, post_data=data)
-        raw_get_token = json.loads(ret.text)
+        raw_get_token = ret.json()
 
         if raw_get_token.get("thirdFactorAuthAccessToken"):
             raise KeyError(

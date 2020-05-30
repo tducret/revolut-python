@@ -24,6 +24,8 @@ else:
     _PHONE = os.environ.get('REVOLUT_PHONE')
     _PASSWORD = os.environ.get('REVOLUT_TOKEN')
 
+assert _DEVICE_ID
+assert _TOKEN
 revolut = Revolut(token=_TOKEN, device_id=_DEVICE_ID)
 
 
@@ -218,16 +220,16 @@ def test_get_token(capsys):
                     simulate=_SIMU_GET_TOKEN)
 
     if _SIMU_GET_TOKEN is True:
-        sms_code = "123456"
+        code = "123456"
     else:
         with capsys.disabled():
             print()
-            sms_code = input(
+            code = input(
                 "Please enter the sms code sent to {} : ".format(_PHONE))
 
     token = get_token_step2(device_id=_DEVICE_ID_TEST,
                             phone=_PHONE,
-                            sms_code=sms_code,
+                            code=code,
                             simulate=_SIMU_GET_TOKEN)
     assert token != ""
     print()

@@ -61,19 +61,27 @@ def get_token():
         "account) [ex : +33612345678] ? ")
     password = getpass(
         "What is your Revolut app password [ex: 1234] ? ")
-    get_token_step1(
+    verification_channel = get_token_step1(
         device_id=_CLI_DEVICE_ID,
         phone=phone,
         password=password
     )
 
-    sms_code = input(
-        "Please enter the sms code you received [ex : 123456] : ")
+    if verification_channel.upper() == "EMAIL":
+        print()
+        print("Your verification code has been sent by email.")
+        print("Take note of the link on the **Authenticate** button.")
+        print("It should look like https://revolut.com/app/email-authenticate/<CODE>?scope=login")
+
+    code = input(
+        "Please enter the 6 digit code you received by {} "
+        "[ex : 123456] : ".format(verification_channel)
+    )
 
     token = get_token_step2(
         device_id=_CLI_DEVICE_ID,
         phone=phone,
-        sms_code=sms_code,
+        code=code,
     )
     token_str = "Your token is {}".format(token)
 
