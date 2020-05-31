@@ -4,13 +4,13 @@
 import click
 from getpass import getpass
 import sys
+import uuid
 
 from revolut import Revolut, __version__, get_token_step1, get_token_step2
 
 # Usage : revolut_cli.py --help
 
-_CLI_DEVICE_ID = 'revolut_cli'
-
+_CLI_DEVICE_ID = 'cli_{}'.format(uuid.getnode())
 
 @click.command()
 @click.option(

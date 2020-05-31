@@ -4,10 +4,11 @@ import click
 from revolut import Revolut, __version__
 import revolut_bot
 import sys
+import uuid
 
 # Usage : revolutbot.py --help
 
-_CLI_DEVICE_ID = 'revolut_cli'
+_CLI_DEVICE_ID = 'cli_{}'.format(uuid.getnode())
 _BOT_PERCENT_MARGIN = 1  # at least 1% benefit to exchange
 _VERBOSE_MODE = False  # can be changed with --verbose parameter
 

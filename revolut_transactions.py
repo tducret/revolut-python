@@ -8,11 +8,12 @@ import sys
 from datetime import datetime
 from datetime import timedelta
 from getpass import getpass
+import uuid
 
 from revolut import Revolut, __version__, get_token_step1, get_token_step2
 
 
-_CLI_DEVICE_ID = 'revolut_cli'
+_CLI_DEVICE_ID = 'cli_{}'.format(uuid.getnode())
 _URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
 
 
