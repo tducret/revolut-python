@@ -25,7 +25,7 @@ _AVAILABLE_CURRENCIES = ["USD", "RON", "HUF", "CZK", "GBP", "CAD", "THB",
                          "AED", "EUR", "JPY", "ZAR", "NZD", "HKD", "TRY",
                          "QAR", "NOK", "SEK", "BTC", "ETH", "XRP", "BCH",
                          "LTC", "SAR", "RUB", "RSD", "MXN", "ISK", "HRK",
-                         "BGN", "XAU", "IDR", "INR", "MYR", "PHP"]
+                         "BGN", "XAU", "IDR", "INR", "MYR", "PHP", "XLM"]
 
 _VAULT_ACCOUNT_TYPE = "SAVINGS"
 _ACTIVE_ACCOUNT = "ACTIVE"
