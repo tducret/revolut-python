@@ -492,16 +492,23 @@ def get_token_step2(device_id, phone, code, simulate=False):
         data = {"phone": phone, "code": code}
         ret = c._post(_URL_GET_TOKEN_STEP2, json=data)
         raw_get_token = ret.json()
+    return raw_get_token
 
-        if raw_get_token.get("thirdFactorAuthAccessToken"):
-            raise KeyError(
-                "Token generation with a third factor authentication (selfie) "
-                "is not currently supported by this package"
-            )
 
-    user_id = raw_get_token["user"]["id"]
-    access_token = raw_get_token["accessToken"]
-    token_to_encode = '{}:{}'.format(user_id, access_token).encode('ascii')
+def extract_token(json_response):
+    user_id = json_response["user"]["id"]
+    access_token = json_response["accessToken"]
+    token_to_encode = f'{user_id}:{access_token}'.encode('ascii')
     # Ascii encoding required by b64encode function : 8 bits char as input
     token = base64.b64encode(token_to_encode)
     return token.decode('ascii')
+
+
+def signin_biometric(device_id, phone, access_token, selfie_filepath):
+    files = {'selfie': open(selfie_filepath,'rb')}
+    c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
+    c.session.auth = (phone, access_token)
+    res = c._post('https://api.revolut.com/biometric-signin/selfie', files=files)
+    biometric_id = res.json()['id']
+    res = c._post(f'https://api.revolut.com/biometric-signin/confirm/{biometric_id}')
+    return res.json()
