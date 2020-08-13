@@ -30,13 +30,18 @@ Usage: revolut_cli.py [OPTIONS]
   Get the account balances on Revolut
 
 Options:
-  -t, --token TEXT     your Revolut token (or set the env var REVOLUT_TOKEN)
-  -l, --language TEXT  language ("fr" or "en"), for the csv header and
-                       separator
-  -a, --account TEXT   account name (ex : "EUR CURRENT") to get the balance
-                       for the account
-  --version            Show the version and exit.
-  --help               Show this message and exit.
+  -d, --device-id TEXT  your Revolut token (or set the env var
+                        REVOLUT_DEVICE_ID)
+
+  -t, --token TEXT      your Revolut token (or set the env var REVOLUT_TOKEN)
+  -l, --language TEXT   language ("fr" or "en"), for the csv header and
+                        separator
+
+  -a, --account TEXT    account name (ex : "EUR CURRENT") to get the balance
+                        for the account
+
+  --version             Show the version and exit.
+  --help                Show this message and exit
  ```
 
  Example output :
@@ -64,14 +69,23 @@ Usage: revolut_transactions.py [OPTIONS]
   Get the account balances on Revolut
 
 Options:
-  -t, --token TEXT            your Revolut token (or set the env var
-                              REVOLUT_TOKEN)
-  -l, --language TEXT         language ("fr" or "en"), for the csv header and
-                              separator
-  -t, --from_date [%Y-%m-%d]  transactions lookback date in YYYY-MM-DD format
-                              (ex: "2019-10-26"). Default 30 days back
-  -r, --reverse               reverse the order of the transactions displayed
-  --help                      Show this message and exit.
+  -d, --device-id TEXT            your Revolut token (or set the env var
+                                  REVOLUT_DEVICE_ID)
+
+  -t, --token TEXT                your Revolut token (or set the env var
+                                  REVOLUT_TOKEN)
+
+  -l, --language [en|fr]          language for the csv header and separator
+  -t, --from_date [%Y-%m-%d]      transactions lookback date in YYYY-MM-DD
+                                  format (ex: "2019-10-26"). Default 30 days
+                                  back
+
+  -fmt, --output_format [csv|json]
+                                  output format
+  -r, --reverse                   reverse the order of the transactions
+                                  displayed
+
+  --help                          Show this message and exit.
 ```
 
  Example output :
