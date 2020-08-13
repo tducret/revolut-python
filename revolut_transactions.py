@@ -59,7 +59,7 @@ def main(token, language, from_date, output_format, reverse):
             transactions = reversed(transactions)
         print(json.dumps(transactions))
     else:
-        print(f"output format {output_format!r} not implemented")
+        print("output format {!r} not implemented".format(output_format))
         exit(1)
 
 
