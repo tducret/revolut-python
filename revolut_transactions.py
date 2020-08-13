@@ -3,6 +3,7 @@
 
 import click
 import json
+import os
 
 from datetime import datetime
 from datetime import timedelta
@@ -10,10 +11,14 @@ from datetime import timedelta
 from revolut import Revolut, __version__
 
 
-_CLI_DEVICE_ID = 'revolut_cli'
-
-
 @click.command()
+@click.option(
+    '--device-id', '-d',
+    envvar="REVOLUT_DEVICE_ID",
+    type=str,
+    help='your Revolut token (or set the env var REVOLUT_DEVICE_ID)',
+    default='revolut_cli',
+)
 @click.option(
     '--token', '-t',
     envvar="REVOLUT_TOKEN",
@@ -43,13 +48,13 @@ _CLI_DEVICE_ID = 'revolut_cli'
     is_flag=True,
     help='reverse the order of the transactions displayed',
 )
-def main(token, language, from_date, output_format, reverse):
+def main(device_id, token, language, from_date, output_format, reverse):
     """ Get the account balances on Revolut """
     if token is None:
         print("You don't seem to have a Revolut token. Use 'revolut_cli' to obtain one")
         exit(1)
 
-    rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
+    rev = Revolut(device_id=device_id, token=token)
     account_transactions = rev.get_account_transactions(from_date)
     if output_format == 'csv':
         print(account_transactions.csv(lang=language, reverse=reverse))

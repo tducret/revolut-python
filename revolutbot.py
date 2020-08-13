@@ -7,7 +7,6 @@ import sys
 
 # Usage : revolutbot.py --help
 
-_CLI_DEVICE_ID = 'revolut_cli'
 _BOT_PERCENT_MARGIN = 1  # at least 1% benefit to exchange
 _VERBOSE_MODE = False  # can be changed with --verbose parameter
 
@@ -17,6 +16,13 @@ _RETURN_CODE_ERROR = 2
 
 
 @click.command()
+@click.option(
+    '--device-id', '-d',
+    envvar="REVOLUT_DEVICE_ID",
+    type=str,
+    help='your Revolut token (or set the env var REVOLUT_DEVICE_ID)',
+    default='revolut_cli',
+)
 @click.option(
     '--token', '-t',
     envvar="REVOLUT_TOKEN",
@@ -48,7 +54,7 @@ _RETURN_CODE_ERROR = 2
     version=__version__,
     message='%(prog)s, based on [revolut] package version %(version)s'
 )
-def main(token, simulate, historyfile, verbose, forceexchange):
+def main(device_id, token, simulate, historyfile, verbose, forceexchange):
     if token is None:
         print("You don't seem to have a Revolut token")
         print("Please execute revolut_cli.py first to get one")
@@ -56,7 +62,7 @@ def main(token, simulate, historyfile, verbose, forceexchange):
 
     global _VERBOSE_MODE
     _VERBOSE_MODE = verbose
-    rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
+    rev = Revolut(device_id=device_id, token=token)
 
     to_buy_or_not_to_buy(revolut=rev,
                          simulate=simulate,

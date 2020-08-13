@@ -3,16 +3,20 @@
 
 import click
 from getpass import getpass
+import uuid
 import sys
 
 from revolut import Revolut, __version__, get_token_step1, get_token_step2, signin_biometric, extract_token
 
 # Usage : revolut_cli.py --help
 
-_CLI_DEVICE_ID = 'revolut_cli'
-
-
 @click.command()
+@click.option(
+    '--device-id', '-d',
+    envvar="REVOLUT_DEVICE_ID",
+    type=str,
+    help='your Revolut token (or set the env var REVOLUT_DEVICE_ID)',
+)
 @click.option(
     '--token', '-t',
     envvar="REVOLUT_TOKEN",
@@ -34,20 +38,23 @@ _CLI_DEVICE_ID = 'revolut_cli'
     version=__version__,
     message='%(prog)s, based on [revolut] package version %(version)s'
 )
-def main(token, language, account):
+def main(device_id, token, language, account):
     """ Get the account balances on Revolut """
     
     if token is None:
         print("You don't seem to have a Revolut token")
         answer = input("Would you like to generate a token [yes/no]? ")
         selection(answer)
+        device_id = 'cli_{}'.format(uuid.getnode())  # Unique id for a machine
         while token is None:
             try:
-                token = get_token()
+                token = get_token(device_id=device_id)
             except Exception as e:
                 login_error_handler(e)
 
-    rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
+    if device_id is None:
+        device_id = 'revolut_cli'  # For retro-compatibility
+    rev = Revolut(device_id=device_id, token=token)
     account_balances = rev.get_account_balances()
     if account:
         print(account_balances.get_account_by_name(account).balance)
@@ -55,14 +62,14 @@ def main(token, language, account):
         print(account_balances.csv(lang=language))
 
 
-def get_token():
+def get_token(device_id):
     phone = input(
         "What is your mobile phone (used with your Revolut "
         "account) [ex : +33612345678] ? ")
     password = getpass(
         "What is your Revolut app password [ex: 1234] ? ")
     verification_channel = get_token_step1(
-        device_id=_CLI_DEVICE_ID,
+        device_id=device_id,
         phone=phone,
         password=password
     )
@@ -79,7 +86,7 @@ def get_token():
     )
 
     response = get_token_step2(
-        device_id=_CLI_DEVICE_ID,
+        device_id=device_id,
         phone=phone,
         code=code,
     )
@@ -91,18 +98,21 @@ def get_token():
         selfie_filepath = input(
             "Provide a selfie image file path (800x600) [ex : selfie.png] ")
         response = signin_biometric(
-            _CLI_DEVICE_ID, phone, access_token, selfie_filepath)
+            device_id, phone, access_token, selfie_filepath)
 
     token = extract_token(response)
     token_str = "Your token is {}".format(token)
+    device_id_str = "Your device id is {}".format(device_id)
 
     dashes = len(token_str) * "-"
-    print("\n".join(("", dashes, token_str, dashes, "")))
+    print("\n".join(("", dashes, token_str, device_id_str, dashes, "")))
     print("You may use it with the --token of this command or set the "
           "environment variable in your ~/.bash_profile or ~/.bash_rc, "
           "for example :", end="\n\n")
-    print(">>> revolut_cli.py --token={}".format(token))
+    print(">>> revolut_cli.py --device-id={} --token={}".format(device_id, token))
     print("or")
+    print('echo "export REVOLUT_DEVICE_ID={}" >> ~/.bash_profile'
+          .format(device_id))
     print('echo "export REVOLUT_TOKEN={}" >> ~/.bash_profile'
           .format(token))
     return token
