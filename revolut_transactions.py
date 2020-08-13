@@ -3,17 +3,14 @@
 
 import click
 import json
-import sys
 
 from datetime import datetime
 from datetime import timedelta
-from getpass import getpass
 
-from revolut import Revolut, __version__, get_token_step1, get_token_step2
+from revolut import Revolut, __version__
 
 
 _CLI_DEVICE_ID = 'revolut_cli'
-_URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
 
 
 @click.command()
@@ -25,8 +22,8 @@ _URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
 )
 @click.option(
     '--language', '-l',
-    type=str,
-    help='language ("fr" or "en"), for the csv header and separator',
+    type=click.Choice(['en', 'fr']),
+    help='language for the csv header and separator',
     default='fr'
 )
 @click.option(
@@ -36,19 +33,35 @@ _URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
     default=(datetime.now()-timedelta(days=30)).strftime("%Y-%m-%d")
 )
 @click.option(
+    '--output_format', '-fmt',
+    type=click.Choice(['csv', 'json']),
+    help="output format",
+    default='csv',
+)
+@click.option(
     '--reverse', '-r',
     is_flag=True,
     help='reverse the order of the transactions displayed',
 )
-def main(token, language, from_date, reverse):
+def main(token, language, from_date, output_format, reverse):
     """ Get the account balances on Revolut """
     if token is None:
         print("You don't seem to have a Revolut token. Use 'revolut_cli' to obtain one")
-        sys.exit()
+        exit(1)
 
     rev = Revolut(device_id=_CLI_DEVICE_ID, token=token)
     account_transactions = rev.get_account_transactions(from_date)
-    print(account_transactions.csv(lang=language, reverse=reverse))
+    if output_format == 'csv':
+        print(account_transactions.csv(lang=language, reverse=reverse))
+    elif output_format == 'json':
+        transactions = account_transactions.raw_list
+        if reverse:
+            transactions = reversed(transactions)
+        print(json.dumps(transactions))
+    else:
+        print("output format {!r} not implemented".format(output_format))
+        exit(1)
+
 
 if __name__ == "__main__":
     main()

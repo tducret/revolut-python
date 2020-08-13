@@ -11,12 +11,13 @@ from urllib.parse import urljoin
 
 __version__ = '0.1.4.dev0'  # Should be the same in setup.py
 
-_URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
-_URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
-_URL_QUOTE = "https://api.revolut.com/quote/"
-_URL_EXCHANGE = "https://api.revolut.com/exchange"
-_URL_GET_TOKEN_STEP1 = "https://api.revolut.com/signin"
-_URL_GET_TOKEN_STEP2 = "https://api.revolut.com/signin/confirm"
+API_BASE = "https://api.revolut.com"
+_URL_GET_ACCOUNTS = API_BASE + "/user/current/wallet"
+_URL_GET_TRANSACTIONS_LAST = API_BASE + "/user/current/transactions/last"
+_URL_QUOTE = API_BASE + "/quote/"
+_URL_EXCHANGE = API_BASE + "/exchange"
+_URL_GET_TOKEN_STEP1 = API_BASE + "/signin"
+_URL_GET_TOKEN_STEP2 = API_BASE + "/signin/confirm"
 
 _DEFAULT_TOKEN_FOR_SIGNIN = "QXBwOlM5V1VuU0ZCeTY3Z1dhbjc="
 
@@ -132,7 +133,7 @@ class Client:
     """ Do the requests with the Revolut servers """
     def __init__(self, token, device_id):
         self.session = requests.session()
-        self.headers = {
+        self.session.headers = {
                     'Host': 'api.revolut.com',
                     'X-Api-Version': '1',
                     'X-Client-Version': '6.34.3',
@@ -141,22 +142,20 @@ class Client:
                     'Authorization': 'Basic '+token,
                     }
 
-    def _get(self, url, expected_status_code=200):
-        ret = self.session.get(url=url, headers=self.headers)
+    def _get(self, url, *, expected_status_code=200, **kwargs):
+        ret = self.session.get(url=url, **kwargs)
         if ret.status_code != expected_status_code:
             raise ConnectionError(
-                'Status code {status} for url {url}\n{content}'.format(
-                    status=ret.status_code, url=url, content=ret.text))
+                'Status code {} for url {}\n{}'.format(
+                    ret.status_code, url, ret.text))
         return ret
 
-    def _post(self, url, post_data, expected_status_code=200):
-        ret = self.session.post(url=url,
-                                headers=self.headers,
-                                json=post_data)
+    def _post(self, url, *, expected_status_code=200, **kwargs):
+        ret = self.session.post(url=url, **kwargs)
         if ret.status_code != expected_status_code:
             raise ConnectionError(
-                'Status code {status} for url {url}\n{content}'.format(
-                    status=ret.status_code, url=url, content=ret.text))
+                'Status code {} for url {}\n{}'.format(
+                    ret.status_code, url, ret.text))
         return ret
 
 
@@ -168,7 +167,7 @@ class Revolut:
         """ Get the account balance for each currency
         and returns it as a dict {"balance":XXXX, "currency":XXXX} """
         ret = self.client._get(_URL_GET_ACCOUNTS)
-        raw_accounts = json.loads(ret.text)
+        raw_accounts = ret.json()
 
         account_balances = []
         for raw_account in raw_accounts.get("pockets"):
@@ -183,22 +182,29 @@ class Revolut:
         self.account_balances = Accounts(account_balances)
         return self.account_balances
 
-    def get_account_transactions(self, from_date):
-        """ Get the account transactions and return as json """
-        from_date_ts = from_date.timestamp()
-        path = _URL_GET_TRANSACTIONS + '?from={from_date_ts}&walletId={wallet_id}'.format(
-            from_date_ts=int(from_date_ts) * 1000,
-            wallet_id=self.get_wallet_id()
-        )
-        ret = self.client._get(path)
-        raw_transactions = json.loads(ret.text)
-        transactions = AccountTransactions(raw_transactions)
-        return transactions
+    def get_account_transactions(self, from_date=None, to_date=None):
+        """Get the account transactions."""
+        raw_transactions = []
+        params = {}
+        if to_date:
+            params['to'] = int(to_date.timestamp()) * 1000
+        if from_date:
+            params['from'] = int(from_date.timestamp()) * 1000
+
+        while True:
+            ret = self.client._get(_URL_GET_TRANSACTIONS_LAST, params=params)
+            ret_transactions = ret.json()
+            if not ret_transactions:
+                break
+            params['to'] = ret_transactions[-1]['startedDate']
+            raw_transactions.extend(ret_transactions)
+        
+        return AccountTransactions(raw_transactions)
 
     def get_wallet_id(self):
         """ Get the main wallet_id """
         ret = self.client._get(_URL_GET_ACCOUNTS)
-        raw = json.loads(ret.text)
+        raw = ret.json()
         return raw.get('id')
 
     def quote(self, from_amount, to_currency):
@@ -213,7 +219,7 @@ class Revolut:
             to_currency,
             from_amount.revolut_amount))
         ret = self.client._get(url_quote)
-        raw_quote = json.loads(ret.text)
+        raw_quote = ret.json()
         quote_obj = Amount(revolut_amount=raw_quote["to"]["amount"],
                            currency=to_currency)
         return quote_obj
@@ -257,8 +263,8 @@ class Revolut:
             "updatedDate":123456789}]'
             raw_exchange = json.loads(simu)
         else:
-            ret = self.client._post(url=_URL_EXCHANGE, post_data=data)
-            raw_exchange = json.loads(ret.text)
+            ret = self.client._post(_URL_EXCHANGE, json=data)
+            raw_exchange = ret.json()
 
         if raw_exchange[0]["state"] == "COMPLETED":
             amount = raw_exchange[0]["counterpart"]["amount"]
@@ -462,15 +468,12 @@ class AccountTransactions:
 
 def get_token_step1(device_id, phone, password, simulate=False):
     """ Function to obtain a Revolut token (step 1 : send a code by sms/email) """
-    if not simulate:
-        c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
-        data = {"phone": phone, "password": password}
-        ret = c._post(url=_URL_GET_TOKEN_STEP1,
-                       post_data=data,
-                       expected_status_code=200)
-        channel = ret.json().get('channel')
-    else:
-        channel = "SMS"
+    if simulate:
+        return "SMS"
+    c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
+    data = {"phone": phone, "password": password}
+    ret = c._post(_URL_GET_TOKEN_STEP1, json=data)
+    channel = ret.json().get("channel")
     return channel
 
 
@@ -497,18 +500,25 @@ def get_token_step2(device_id, phone, code, simulate=False):
         c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
         code = code.replace("-", "")  # If the user would put -
         data = {"phone": phone, "code": code}
-        ret = c._post(url=_URL_GET_TOKEN_STEP2, post_data=data)
+        ret = c._post(_URL_GET_TOKEN_STEP2, json=data)
         raw_get_token = ret.json()
+    return raw_get_token
 
-        if raw_get_token.get("thirdFactorAuthAccessToken"):
-            raise KeyError(
-                "Token generation with a third factor authentication (selfie) "
-                "is not currently supported by this package"
-            )
 
-    user_id = raw_get_token["user"]["id"]
-    access_token = raw_get_token["accessToken"]
-    token_to_encode = '{}:{}'.format(user_id, access_token).encode('ascii')
+def extract_token(json_response):
+    user_id = json_response["user"]["id"]
+    access_token = json_response["accessToken"]
+    token_to_encode = "{}:{}".format(user_id, access_token).encode("ascii")
     # Ascii encoding required by b64encode function : 8 bits char as input
     token = base64.b64encode(token_to_encode)
-    return token.decode('ascii')
+    return token.decode("ascii")
+
+
+def signin_biometric(device_id, phone, access_token, selfie_filepath):
+    files = {"selfie": open(selfie_filepath, "rb")}
+    c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
+    c.session.auth = (phone, access_token)
+    res = c._post(API_BASE + "/biometric-signin/selfie", files=files)
+    biometric_id = res.json()["id"]
+    res = c._post(API_BASE + "/biometric-signin/confirm/" + biometric_id)
+    return res.json()

@@ -5,7 +5,7 @@ import click
 from getpass import getpass
 import sys
 
-from revolut import Revolut, __version__, get_token_step1, get_token_step2
+from revolut import Revolut, __version__, get_token_step1, get_token_step2, signin_biometric, extract_token
 
 # Usage : revolut_cli.py --help
 
@@ -78,11 +78,22 @@ def get_token():
         "[ex : 123456] : ".format(verification_channel)
     )
 
-    token = get_token_step2(
+    response = get_token_step2(
         device_id=_CLI_DEVICE_ID,
         phone=phone,
         code=code,
     )
+
+    if "thirdFactorAuthAccessToken" in response:
+        access_token = response["thirdFactorAuthAccessToken"]
+        print()
+        print("Selfie 3rd factor authentication was requested.")
+        selfie_filepath = input(
+            "Provide a selfie image file path (800x600) [ex : selfie.png] ")
+        response = signin_biometric(
+            _CLI_DEVICE_ID, phone, access_token, selfie_filepath)
+
+    token = extract_token(response)
     token_str = "Your token is {}".format(token)
 
     dashes = len(token_str) * "-"
