@@ -13,7 +13,7 @@ __version__ = '0.1.4.dev0'  # Should be the same in setup.py
 
 API_BASE = "https://api.revolut.com"
 _URL_GET_ACCOUNTS = API_BASE + "/user/current/wallet"
-_URL_GET_TRANSACTIONS_LAST = API_BASE +'/user/current/transactions/last'
+_URL_GET_TRANSACTIONS_LAST = API_BASE + "/user/current/transactions/last"
 _URL_QUOTE = API_BASE + "/quote/"
 _URL_EXCHANGE = API_BASE + "/exchange"
 _URL_GET_TOKEN_STEP1 = API_BASE + "/signin"
@@ -146,14 +146,16 @@ class Client:
         ret = self.session.get(url=url, **kwargs)
         if ret.status_code != expected_status_code:
             raise ConnectionError(
-                f'Status code {ret.status_code} for url {url}\n{ret.text}')
+                'Status code {} for url {}\n{}'.format(
+                    ret.status_code, url, ret.text))
         return ret
 
     def _post(self, url, *, expected_status_code=200, **kwargs):
         ret = self.session.post(url=url, **kwargs)
         if ret.status_code != expected_status_code:
             raise ConnectionError(
-                f'Status code {ret.status_code} for url {url}\n{ret.text}')
+                'Status code {} for url {}\n{}'.format(
+                    ret.status_code, url, ret.text))
         return ret
 
 
@@ -471,7 +473,7 @@ def get_token_step1(device_id, phone, password, simulate=False):
     c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
     data = {"phone": phone, "password": password}
     ret = c._post(_URL_GET_TOKEN_STEP1, json=data)
-    channel = ret.json().get('channel')
+    channel = ret.json().get("channel")
     return channel
 
 
@@ -506,17 +508,17 @@ def get_token_step2(device_id, phone, code, simulate=False):
 def extract_token(json_response):
     user_id = json_response["user"]["id"]
     access_token = json_response["accessToken"]
-    token_to_encode = f'{user_id}:{access_token}'.encode('ascii')
+    token_to_encode = '{}:{}'.format(user_id, access_token).encode("ascii")
     # Ascii encoding required by b64encode function : 8 bits char as input
     token = base64.b64encode(token_to_encode)
-    return token.decode('ascii')
+    return token.decode("ascii")
 
 
 def signin_biometric(device_id, phone, access_token, selfie_filepath):
-    files = {'selfie': open(selfie_filepath,'rb')}
+    files = {"selfie": open(selfie_filepath, "rb")}
     c = Client(device_id=device_id, token=_DEFAULT_TOKEN_FOR_SIGNIN)
     c.session.auth = (phone, access_token)
-    res = c._post('https://api.revolut.com/biometric-signin/selfie', files=files)
-    biometric_id = res.json()['id']
-    res = c._post(f'https://api.revolut.com/biometric-signin/confirm/{biometric_id}')
+    res = c._post(API_BASE + "/biometric-signin/selfie", files=files)
+    biometric_id = res.json()["id"]
+    res = c._post(API_BASE + "/biometric-signin/confirm/" + biometric_id)
     return res.json()
