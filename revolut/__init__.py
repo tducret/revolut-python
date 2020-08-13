@@ -508,7 +508,7 @@ def get_token_step2(device_id, phone, code, simulate=False):
 def extract_token(json_response):
     user_id = json_response["user"]["id"]
     access_token = json_response["accessToken"]
-    token_to_encode = '{}:{}'.format(user_id, access_token).encode("ascii")
+    token_to_encode = "{}:{}".format(user_id, access_token).encode("ascii")
     # Ascii encoding required by b64encode function : 8 bits char as input
     token = base64.b64encode(token_to_encode)
     return token.decode("ascii")
