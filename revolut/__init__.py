@@ -11,12 +11,13 @@ from urllib.parse import urljoin
 
 __version__ = '0.1.4.dev0'  # Should be the same in setup.py
 
-_URL_GET_ACCOUNTS = "https://api.revolut.com/user/current/wallet"
-_URL_GET_TRANSACTIONS = 'https://api.revolut.com/user/current/transactions'
-_URL_QUOTE = "https://api.revolut.com/quote/"
-_URL_EXCHANGE = "https://api.revolut.com/exchange"
-_URL_GET_TOKEN_STEP1 = "https://api.revolut.com/signin"
-_URL_GET_TOKEN_STEP2 = "https://api.revolut.com/signin/confirm"
+API_BASE = "https://api.revolut.com"
+_URL_GET_ACCOUNTS = API_BASE + "/user/current/wallet"
+_URL_GET_TRANSACTIONS_LAST = API_BASE +'/user/current/transactions/last'
+_URL_QUOTE = API_BASE + "/quote/"
+_URL_EXCHANGE = API_BASE + "/exchange"
+_URL_GET_TOKEN_STEP1 = API_BASE + "/signin"
+_URL_GET_TOKEN_STEP2 = API_BASE + "/signin/confirm"
 
 _DEFAULT_TOKEN_FOR_SIGNIN = "QXBwOlM5V1VuU0ZCeTY3Z1dhbjc="
 
@@ -179,17 +180,24 @@ class Revolut:
         self.account_balances = Accounts(account_balances)
         return self.account_balances
 
-    def get_account_transactions(self, from_date):
-        """ Get the account transactions and return as json """
-        from_date_ts = from_date.timestamp()
-        path = _URL_GET_TRANSACTIONS + '?from={from_date_ts}&walletId={wallet_id}'.format(
-            from_date_ts=int(from_date_ts) * 1000,
-            wallet_id=self.get_wallet_id()
-        )
-        ret = self.client._get(path)
-        raw_transactions = ret.json()
-        transactions = AccountTransactions(raw_transactions)
-        return transactions
+    def get_account_transactions(self, from_date=None, to_date=None):
+        """Get the account transactions."""
+        raw_transactions = []
+        params = {}
+        if to_date:
+            params['to'] = int(to_date.timestamp()) * 1000
+        if from_date:
+            params['from'] = int(from_date.timestamp()) * 1000
+
+        while True:
+            ret = self.client._get(_URL_GET_TRANSACTIONS_LAST, params=params)
+            ret_transactions = ret.json()
+            if not ret_transactions:
+                break
+            params['to'] = ret_transactions[-1]['startedDate']
+            raw_transactions.extend(ret_transactions)
+        
+        return AccountTransactions(raw_transactions)
 
     def get_wallet_id(self):
         """ Get the main wallet_id """
