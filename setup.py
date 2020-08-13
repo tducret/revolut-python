@@ -9,7 +9,7 @@ with open(reqs_path) as reqs_file:
 
 # Based on http://peterdowns.com/posts/first-time-with-pypi.html
 
-__version__ = '0.1.4.dev0'  # Should match with __init.py__
+__version__ = '0.1.4'  # Should match with __init.py__
 _NAME = 'revolut'
 _PACKAGE_LIST = ['revolut', 'revolut_bot']
 _URL_GITHUB = 'https://github.com/tducret/revolut-python'
@@ -47,7 +47,7 @@ setup(
 # ------------------------------------------
 # Make sure everything was pushed (with a git status)
 # (or git commit --am "Comment" and git push)
-# export VERSION=0.1.4.dev0; git tag $VERSION -m "Update X-Client-Version + raise error when requiring Third factor authentication + print extra tips to the CLI user when creating the token"; git push --tags
+# export VERSION=0.1.4; git tag $VERSION -m "Update X-Client-Version + allow passing a selfie when Third factor authentication is required"; git push --tags
 
 # If you need to delete a tag
 # git push --delete origin $VERSION; git tag -d $VERSION
